@@ -3,8 +3,7 @@ using ToInfinity.Domain.ValueObjects;
 
 namespace ToInfinity.Application.Common.Persistence;
 
-public interface IWeddingVenueRepository : IBaseRepository<WeddingVenue, VenueId>
+public interface IWeddingVenueRepository : IBaseRepository<VenueId, WeddingVenue>
 {
-    Task<bool> ExistsAsync(VenueId id, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<WeddingVenue>> GetByUserIdAsync(UserId userId, CancellationToken cancellationToken = default);
 }

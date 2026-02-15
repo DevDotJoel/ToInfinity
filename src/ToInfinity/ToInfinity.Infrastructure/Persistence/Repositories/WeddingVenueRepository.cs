@@ -5,21 +5,86 @@ using ToInfinity.Domain.ValueObjects;
 
 namespace ToInfinity.Infrastructure.Persistence.Repositories;
 
-public class WeddingVenueRepository : BaseRepository<WeddingVenue, VenueId>, IWeddingVenueRepository
+public class WeddingVenueRepository : IWeddingVenueRepository
 {
-    public WeddingVenueRepository(ApplicationDbContext context) : base(context)
+    private readonly ApplicationDbContext _context;
+
+    public WeddingVenueRepository(ApplicationDbContext context)
     {
+        _context = context;
     }
 
-    public async Task<bool> ExistsAsync(VenueId id, CancellationToken cancellationToken = default)
+    public async Task<List<WeddingVenue>> GetAllWithPaginationAsync(int page, int size, CancellationToken cancellationToken)
     {
-        return await DbSet.AnyAsync(v => v.Id == id, cancellationToken);
+        return await _context.WeddingVenues
+            .AsNoTracking()
+            .Skip((page - 1) * size)
+            .Take(size)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<WeddingVenue>> GetAllAsync(CancellationToken cancellationToken)
+    {
+        return await _context.WeddingVenues
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<WeddingVenue?> GetByIdAsync(VenueId id, CancellationToken cancellationToken)
+    {
+        return await _context.WeddingVenues
+            .Where(v => v.Id == id)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<List<WeddingVenue>> GetByIdsAsync(List<VenueId> ids, CancellationToken cancellationToken)
+    {
+        return await _context.WeddingVenues
+            .Where(v => ids.Contains(v.Id))
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task AddAsync(WeddingVenue entity, CancellationToken cancellationToken)
+    {
+        await _context.WeddingVenues.AddAsync(entity, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task AddRangeAsync(List<WeddingVenue> entities, CancellationToken cancellationToken)
+    {
+        await _context.WeddingVenues.AddRangeAsync(entities, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task UpdateAsync(WeddingVenue entity, CancellationToken cancellationToken)
+    {
+        _context.WeddingVenues.Update(entity);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RemoveAsync(WeddingVenue entity, CancellationToken cancellationToken)
+    {
+        _context.WeddingVenues.Remove(entity);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RemoveRangeAsync(List<WeddingVenue> entities, CancellationToken cancellationToken)
+    {
+        _context.WeddingVenues.RemoveRange(entities);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<bool> ExistsAsync(VenueId id)
+    {
+        return await _context.WeddingVenues.AnyAsync(v => v.Id == id);
     }
 
     public async Task<IReadOnlyList<WeddingVenue>> GetByUserIdAsync(UserId userId, CancellationToken cancellationToken = default)
     {
-        return await DbSet
+        return await _context.WeddingVenues
             .Where(v => v.UserId == userId)
+            .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
 }

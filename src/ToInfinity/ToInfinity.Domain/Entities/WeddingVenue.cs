@@ -37,6 +37,10 @@ public sealed class WeddingVenue : Entity<VenueId>, IBaseUser
         PriceRange = priceRange;
         MainImageUrl = mainImageUrl;
     }
+    private WeddingVenue()
+    {
+
+    }
 
     public static ErrorOr<WeddingVenue> Create(
         UserId userId,

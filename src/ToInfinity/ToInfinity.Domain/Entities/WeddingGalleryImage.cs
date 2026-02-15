@@ -14,6 +14,10 @@ public sealed class WeddingGalleryImage : Entity<GalleryImageId>
         Url = url;
         Order = order;
     }
+    private WeddingGalleryImage()
+    {
+
+    }
 
     public static ErrorOr<WeddingGalleryImage> Create(string url, int order)
     {

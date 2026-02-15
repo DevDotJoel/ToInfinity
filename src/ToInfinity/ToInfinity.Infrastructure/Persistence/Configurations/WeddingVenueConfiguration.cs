@@ -9,6 +9,12 @@ public class WeddingVenueConfiguration : IEntityTypeConfiguration<WeddingVenue>
 {
     public void Configure(EntityTypeBuilder<WeddingVenue> builder)
     {
+        ConfigureWeddingVenuesTable(builder);
+        ConfigureWeddingGalleryImagesTable(builder);
+    }
+
+    private void ConfigureWeddingVenuesTable(EntityTypeBuilder<WeddingVenue> builder)
+    {
         builder.ToTable("WeddingVenues");
 
         builder.HasKey(v => v.Id);
@@ -71,12 +77,39 @@ public class WeddingVenueConfiguration : IEntityTypeConfiguration<WeddingVenue>
                 .HasColumnType("decimal(18,2)")
                 .HasColumnName("PriceRange_Max");
         });
+    }
 
-        builder.HasMany<WeddingGalleryImage>("_gallery")
-            .WithOne()
-            .HasForeignKey("VenueId")
-            .OnDelete(DeleteBehavior.Cascade);
+    private void ConfigureWeddingGalleryImagesTable(EntityTypeBuilder<WeddingVenue> builder)
+    {
+        builder.OwnsMany(v => v.Gallery, gb =>
+        {
+            gb.ToTable("WeddingGalleryImages");
 
-        builder.Navigation("_gallery").UsePropertyAccessMode(PropertyAccessMode.Field);
+            gb.HasKey("Id", "WeddingVenueId");
+
+            gb.Property(g => g.Id)
+                .HasConversion(
+                    id => id.Value,
+                    value => GalleryImageId.Create(value))
+                .ValueGeneratedNever();
+
+            gb.Property(g => g.Url)
+                .IsRequired()
+                .HasMaxLength(500);
+
+            gb.Property(g => g.Order)
+                .IsRequired();
+
+            gb.Property(g => g.CreatedAt)
+                .IsRequired();
+
+            gb.Property(g => g.UpdatedAt)
+                .IsRequired();
+
+            gb.WithOwner().HasForeignKey("WeddingVenueId");
+        });
+
+        builder.Metadata.FindNavigation(nameof(WeddingVenue.Gallery))!
+            .SetPropertyAccessMode(PropertyAccessMode.Field);
     }
 }

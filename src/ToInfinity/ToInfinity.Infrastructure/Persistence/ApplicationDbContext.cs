@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using ToInfinity.Domain.Entities;
@@ -8,6 +9,7 @@ namespace ToInfinity.Infrastructure.Persistence;
 
 public class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>
 {
+
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
     {
@@ -22,6 +24,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
         // Customize Identity table names
         modelBuilder.Entity<ApplicationUser>().ToTable("Users");
         modelBuilder.Entity<ApplicationRole>().ToTable("Roles");
+        modelBuilder.Entity<IdentityUserClaim<Guid>>().ToTable("UsersClaims");
+        modelBuilder.Entity<IdentityUserRole<Guid>>().ToTable("UsersRoles");
+        modelBuilder.Entity<IdentityUserLogin<Guid>>().ToTable("UsersLogins");
+        modelBuilder.Entity<IdentityRoleClaim<Guid>>().ToTable("RolesClaims");
+        modelBuilder.Entity<IdentityUserToken<Guid>>().ToTable("UsersTokens");
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
     }
