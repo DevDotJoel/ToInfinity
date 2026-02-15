@@ -1,5 +1,7 @@
 using System.Reflection;
 using FluentValidation;
+using Mapster;
+using MapsterMapper;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ToInfinity.Application;
@@ -32,6 +34,12 @@ public static class DependencyInjection
                 services.AddScoped(@interface, validator);
             }
         }
+
+        // Register Mapster
+        var config = TypeAdapterConfig.GlobalSettings;
+        config.Scan(assembly);
+        services.AddSingleton(config);
+        services.AddScoped<IMapper, ServiceMapper>();
 
         return services;
     }

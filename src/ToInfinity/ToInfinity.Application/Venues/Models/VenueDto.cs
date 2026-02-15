@@ -1,8 +1,8 @@
-using Microsoft.AspNetCore.Http;
+namespace ToInfinity.Application.Venues.Models;
 
-namespace ToInfinity.Contracts.Venues;
-
-public record CreateWeddingVenueRequest(
+public record VenueDto(
+    Guid Id,
+    Guid UserId,
     string Name,
     string Description,
     string Street,
@@ -10,4 +10,4 @@ public record CreateWeddingVenueRequest(
     int Capacity,
     decimal MinPrice,
     decimal MaxPrice,
-    IFormFile MainImage);
+    string MainImageUrl);

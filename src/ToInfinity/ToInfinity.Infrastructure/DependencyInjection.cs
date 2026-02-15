@@ -21,6 +21,7 @@ public static class DependencyInjection
         services.AddScoped(typeof(IBaseRepository<,>), typeof(BaseRepository<,>));
         services.AddScoped<IWeddingVenueRepository, WeddingVenueRepository>();
 
+        services.AddStorage(configuration);
         services.AddIdentityInfrastructure(configuration);
 
         return services;

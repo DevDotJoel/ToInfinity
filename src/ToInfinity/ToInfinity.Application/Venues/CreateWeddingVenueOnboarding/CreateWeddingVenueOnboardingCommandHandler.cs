@@ -1,23 +1,28 @@
 using ErrorOr;
+using MapsterMapper;
 using MediatR;
 using ToInfinity.Application.Common.Persistence;
-using ToInfinity.Contracts.Venues;
+using ToInfinity.Application.Venues.Models;
 using ToInfinity.Domain.Entities;
 using ToInfinity.Domain.ValueObjects;
 
 namespace ToInfinity.Application.Venues.CreateWeddingVenueOnboarding;
 
 public class CreateWeddingVenueOnboardingCommandHandler
-    : IRequestHandler<CreateWeddingVenueOnboardingCommand, ErrorOr<VenueResult>>
+    : IRequestHandler<CreateWeddingVenueOnboardingCommand, ErrorOr<VenueDto>>
 {
     private readonly IWeddingVenueRepository _venueRepository;
+    private readonly IMapper _mapper;
 
-    public CreateWeddingVenueOnboardingCommandHandler(IWeddingVenueRepository venueRepository)
+    public CreateWeddingVenueOnboardingCommandHandler(
+        IWeddingVenueRepository venueRepository,
+        IMapper mapper)
     {
         _venueRepository = venueRepository;
+        _mapper = mapper;
     }
 
-    public async Task<ErrorOr<VenueResult>> Handle(
+    public async Task<ErrorOr<VenueDto>> Handle(
         CreateWeddingVenueOnboardingCommand command,
         CancellationToken cancellationToken)
     {
@@ -53,16 +58,6 @@ public class CreateWeddingVenueOnboardingCommandHandler
 
         await _venueRepository.AddAsync(venue, cancellationToken);
 
-        return new VenueResult(
-            venue.Id.Value,
-            venue.UserId.Value,
-            venue.Name,
-            venue.Description,
-            venue.Address.Street,
-            venue.Address.City,
-            venue.Capacity,
-            venue.PriceRange.Min,
-            venue.PriceRange.Max,
-            venue.MainImageUrl);
+        return _mapper.Map<VenueDto>(venue);
     }
 }

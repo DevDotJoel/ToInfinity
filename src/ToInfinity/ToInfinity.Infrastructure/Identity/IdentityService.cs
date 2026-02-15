@@ -1,8 +1,8 @@
 using System.Security.Claims;
 using ErrorOr;
 using Microsoft.AspNetCore.Identity;
+using ToInfinity.Application.Auth.Models;
 using ToInfinity.Application.Common.Identity;
-using ToInfinity.Contracts.Auth;
 using ToInfinity.Domain.ValueObjects;
 
 namespace ToInfinity.Infrastructure.Identity;
@@ -23,8 +23,8 @@ public class IdentityService : IIdentityService
         _tokenClaimService = tokenClaimService;
     }
 
-    public async Task<ErrorOr<AuthResult>> RegisterAsync(
-        RegisterRequest request,
+    public async Task<ErrorOr<AuthResultModel>> RegisterAsync(
+        RegisterModel request,
         CancellationToken cancellationToken = default)
     {
         var existingUser = await _userManager.FindByEmailAsync(request.Email);
@@ -58,14 +58,14 @@ public class IdentityService : IIdentityService
 
         await _userManager.UpdateAsync(user);
 
-        return new AuthResult(
+        return new AuthResultModel(
             user.Id,
             tokenResult.AccessToken,
             tokenResult.RefreshToken);
     }
 
-    public async Task<ErrorOr<AuthResult>> LoginAsync(
-        LoginRequest request,
+    public async Task<ErrorOr<AuthResultModel>> LoginAsync(
+        LoginModel request,
         CancellationToken cancellationToken = default)
     {
         var user = await _userManager.FindByEmailAsync(request.Email);
@@ -92,14 +92,14 @@ public class IdentityService : IIdentityService
 
         await _userManager.UpdateAsync(user);
 
-        return new AuthResult(
+        return new AuthResultModel(
             user.Id,
             tokenResult.AccessToken,
             tokenResult.RefreshToken);
     }
 
-    public async Task<ErrorOr<AuthResult>> RefreshTokenAsync(
-        RefreshTokenRequest request,
+    public async Task<ErrorOr<AuthResultModel>> RefreshTokenAsync(
+        RefreshTokenModel request,
         CancellationToken cancellationToken = default)
     {
         if (!_tokenClaimService.ValidateExpiredToken(request.AccessToken))
@@ -149,7 +149,7 @@ public class IdentityService : IIdentityService
 
         await _userManager.UpdateAsync(user);
 
-        return new AuthResult(
+        return new AuthResultModel(
             user.Id,
             tokenResult.AccessToken,
             tokenResult.RefreshToken);

@@ -1,6 +1,6 @@
 using ErrorOr;
 using MediatR;
-using ToInfinity.Contracts.Venues;
+using ToInfinity.Application.Venues.Models;
 using ToInfinity.Domain.ValueObjects;
 
 namespace ToInfinity.Application.Venues.CreateWeddingVenueOnboarding;
@@ -14,4 +14,4 @@ public record CreateWeddingVenueOnboardingCommand(
     int Capacity,
     decimal MinPrice,
     decimal MaxPrice,
-    string MainImageUrl) : IRequest<ErrorOr<VenueResult>>;
+    string MainImageUrl) : IRequest<ErrorOr<VenueDto>>;
