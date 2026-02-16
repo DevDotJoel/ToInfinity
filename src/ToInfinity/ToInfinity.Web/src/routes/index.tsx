@@ -1,7 +1,8 @@
 import { createBrowserRouter } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import HomePage from "../pages/home-page";
-import NotFoundPage from "../pages/not-found-page";
+import VenuesPage from "../pages/venues-page";
+import NotFoundPage from "../pages/not-found-page.tsx";
 
 export const router = createBrowserRouter([
   {
@@ -14,7 +15,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <div>Venues Page - Coming Soon</div>,
+        element: <VenuesPage />,
       },
     ],
   },
@@ -25,6 +26,26 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <div>Catering Page - Coming Soon</div>,
+      },
+    ],
+  },
+  {
+    path: "/signin",
+    element: <Layout />,
+    children: [
+      {
+        index: true,
+        element: <div>Sign In Page - Coming Soon</div>,
+      },
+    ],
+  },
+  {
+    path: "/signup",
+    element: <Layout />,
+    children: [
+      {
+        index: true,
+        element: <div>Sign Up Page - Coming Soon</div>,
       },
     ],
   },

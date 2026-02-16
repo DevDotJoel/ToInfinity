@@ -23,12 +23,12 @@ const CateringHighlights = () => {
             variant="overline"
             sx={{
               color: "secondary.main",
-              letterSpacing: "0.2em",
+              letterSpacing: "0.08em",
               fontSize: "0.75rem",
               fontWeight: 700,
             }}
           >
-            EXQUISITE CUISINE
+            Exquisite Cuisine
           </Typography>
           <Typography
             variant="h2"
@@ -203,6 +203,7 @@ const CateringHighlights = () => {
               borderColor: "primary.main",
               color: "primary.main",
               px: 4,
+              textTransform: "none",
               "&:hover": {
                 borderColor: "secondary.main",
                 color: "secondary.main",

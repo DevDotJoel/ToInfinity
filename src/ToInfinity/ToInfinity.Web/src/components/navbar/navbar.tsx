@@ -33,15 +33,13 @@ const Navbar = () => {
   return (
     <>
       <AppBar
-        position="fixed"
+        position="sticky"
         elevation={0}
         sx={{
           backgroundColor: "rgba(253, 252, 251, 0.92)",
           backdropFilter: "blur(12px)",
           borderBottom: "1px solid",
           borderColor: "rgba(61, 47, 37, 0.08)",
-          top: 0,
-          zIndex: 1100,
         }}
       >
         <Container maxWidth="lg">
@@ -88,6 +86,7 @@ const Navbar = () => {
                       fontSize: "0.95rem",
                       px: 2,
                       borderRadius: 2,
+                      textTransform: "none",
                       position: "relative",
                       "&::after":
                         location.pathname === link.href
@@ -113,17 +112,39 @@ const Navbar = () => {
                   </Button>
                 ))}
                 <Button
-                  variant="contained"
                   component={RouterLink}
-                  to="/venues"
+                  to="/signin"
                   sx={{
-                    ml: 2,
-                    bgcolor: "primary.main",
-                    color: "primary.contrastText",
-                    "&:hover": { bgcolor: "primary.light" },
+                    ml: 1,
+                    color: "text.primary",
+                    fontWeight: 500,
+                    fontSize: "0.95rem",
+                    textTransform: "none",
+                    "&:hover": {
+                      backgroundColor: "rgba(61, 47, 37, 0.04)",
+                      color: "secondary.main",
+                    },
                   }}
                 >
-                  Book Now
+                  Sign In
+                </Button>
+                <Button
+                  variant="contained"
+                  component={RouterLink}
+                  to="/signup"
+                  sx={{
+                    ml: 0.5,
+                    bgcolor: "secondary.main",
+                    color: "#fff",
+                    fontWeight: 600,
+                    fontSize: "0.95rem",
+                    textTransform: "none",
+                    px: 3,
+                    borderRadius: 2,
+                    "&:hover": { bgcolor: "secondary.dark" },
+                  }}
+                >
+                  Sign Up
                 </Button>
               </Box>
             ) : (
@@ -188,20 +209,54 @@ const Navbar = () => {
             </ListItem>
           ))}
         </List>
-        <Box sx={{ px: 3, mt: 2 }}>
+        <Box
+          sx={{
+            px: 3,
+            mt: 2,
+            display: "flex",
+            flexDirection: "column",
+            gap: 1.5,
+          }}
+        >
           <Button
             variant="contained"
             fullWidth
             component={RouterLink}
-            to="/venues"
+            to="/signup"
             onClick={() => setDrawerOpen(false)}
             sx={{
-              bgcolor: "primary.main",
-              color: "primary.contrastText",
-              "&:hover": { bgcolor: "primary.light" },
+              bgcolor: "secondary.main",
+              color: "#fff",
+              fontWeight: 600,
+              textTransform: "none",
+              py: 1.2,
+              borderRadius: 2,
+              "&:hover": { bgcolor: "secondary.dark" },
             }}
           >
-            Book Now
+            Sign Up
+          </Button>
+          <Button
+            fullWidth
+            component={RouterLink}
+            to="/signin"
+            onClick={() => setDrawerOpen(false)}
+            sx={{
+              color: "text.primary",
+              fontWeight: 500,
+              textTransform: "none",
+              py: 1.2,
+              borderRadius: 2,
+              border: "1px solid",
+              borderColor: "rgba(61, 47, 37, 0.15)",
+              "&:hover": {
+                borderColor: "secondary.main",
+                color: "secondary.main",
+                backgroundColor: "rgba(196, 114, 78, 0.04)",
+              },
+            }}
+          >
+            Sign In
           </Button>
         </Box>
       </Drawer>

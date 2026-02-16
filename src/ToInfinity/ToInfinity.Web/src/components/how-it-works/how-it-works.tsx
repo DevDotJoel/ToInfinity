@@ -44,12 +44,12 @@ const HowItWorks = () => {
             variant="overline"
             sx={{
               color: "secondary.main",
-              letterSpacing: "0.2em",
+              letterSpacing: "0.08em",
               fontSize: "0.75rem",
               fontWeight: 700,
             }}
           >
-            SIMPLE PROCESS
+            Simple Process
           </Typography>
           <Typography
             variant="h2"
@@ -84,6 +84,7 @@ const HowItWorks = () => {
               md: "repeat(4, 1fr)",
             },
             gap: 3,
+            pt: 3,
           }}
         >
           {steps.map((step, index) => {
@@ -98,6 +99,7 @@ const HowItWorks = () => {
                   textAlign: "center",
                   position: "relative",
                   bgcolor: "background.paper",
+                  overflow: "visible",
                 }}
               >
                 <CardContent sx={{ p: 3 }}>

@@ -117,7 +117,6 @@ const Footer = () => {
                   color: "secondary.main",
                   mb: 2,
                   fontWeight: 700,
-                  textTransform: "uppercase",
                   fontSize: "0.75rem",
                   letterSpacing: "0.08em",
                 }}

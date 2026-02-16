@@ -1,3 +1,13 @@
+export const venueTypes = [
+  'All',
+  'Ballroom',
+  'Barn',
+  'Beach',
+  'Garden',
+  'Hotel',
+  'Restaurant',
+];
+
 export const venues = [
   {
     id: '1',
@@ -9,6 +19,7 @@ export const venues = [
     capacity: 350,
     price: 15000,
     image: '',
+    description: 'An elegant ballroom featuring crystal chandeliers, marble floors, and floor-to-ceiling windows with stunning city views. Perfect for luxurious wedding celebrations.',
   },
   {
     id: '2',
@@ -20,6 +31,7 @@ export const venues = [
     capacity: 200,
     price: 8500,
     image: '',
+    description: 'A charming rustic barn surrounded by vineyards, offering an authentic countryside experience with modern amenities and breathtaking sunset views.',
   },
   {
     id: '3',
@@ -31,6 +43,7 @@ export const venues = [
     capacity: 250,
     price: 20000,
     image: '',
+    description: 'Experience the magic of a beachfront celebration with pristine white sands, crystal-clear waters, and spectacular Pacific Ocean sunsets.',
   },
 ];
 

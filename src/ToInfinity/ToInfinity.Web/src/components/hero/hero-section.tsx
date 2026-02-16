@@ -31,14 +31,14 @@ const HeroSection = () => {
             variant="overline"
             sx={{
               color: "rgba(255, 255, 255, 0.95)",
-              letterSpacing: "0.2em",
+              letterSpacing: "0.08em",
               fontSize: "0.8rem",
               fontWeight: 600,
               mb: 2,
               display: "block",
             }}
           >
-            WEDDING VENUES & CATERING
+            Wedding Venues & Catering
           </Typography>
           <Typography
             variant="h1"
@@ -80,6 +80,7 @@ const HeroSection = () => {
                 py: 1.5,
                 fontSize: "1rem",
                 fontWeight: 600,
+                textTransform: "none",
                 "&:hover": {
                   bgcolor: "rgba(255, 255, 255, 0.9)",
                 },
@@ -99,6 +100,7 @@ const HeroSection = () => {
                 py: 1.5,
                 fontSize: "1rem",
                 fontWeight: 600,
+                textTransform: "none",
                 borderWidth: 2,
                 "&:hover": {
                   borderColor: "white",
