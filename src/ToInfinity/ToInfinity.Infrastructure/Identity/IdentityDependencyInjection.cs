@@ -36,18 +36,19 @@ public static class IdentityDependencyInjection
         var jwtSettings = new JwtSettings();
         configuration.GetSection("JwtSettings").Bind(jwtSettings);
 
-        // Configure cookie and JWT authentication
+        // Configure JWT Bearer authentication with cookies
         services.AddAuthentication(options =>
         {
-            options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
         })
-        .AddCookie(options =>
+        .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
         {
             options.Cookie.Name = "ToInfinity.Auth";
             options.Cookie.HttpOnly = true;
             options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.Always;
-            options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax; // Same domain
+            options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.None; // Required for cross-origin
             options.ExpireTimeSpan = TimeSpan.FromDays(7);
             options.SlidingExpiration = true;
             options.Events.OnRedirectToLogin = context =>

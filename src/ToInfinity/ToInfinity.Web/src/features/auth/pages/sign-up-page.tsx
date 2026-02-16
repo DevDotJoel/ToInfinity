@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
@@ -24,6 +24,7 @@ import authWeddingImg from "../../../assets/auth-wedding.jpg";
 import { handleGoogleLogin } from "../api/google-auth";
 import { useRegister } from "../hooks/use-register";
 import { signUpSchema, type SignUpFormData } from "../schemas";
+import { queryClient } from "../../../libs/react-query";
 
 function getPasswordStrength(password: string) {
   let score = 0;
@@ -43,13 +44,23 @@ function strengthLabel(score: number) {
 }
 
 export default function SignUpPage() {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [success, setSuccess] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const { mutate: register, isPending } = useRegister({
     config: {
-      onSuccess: () => {
+      onSuccess: async () => {
         setSuccess(true);
+        // Invalidate user query and wait for auth context to refetch
+        await queryClient.invalidateQueries({
+          queryKey: ["user"],
+          refetchType: "active", // Wait for active queries (AuthProvider) to refetch
+        });
+        // Navigate after a short delay to show success animation
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 1500);
       },
     },
   });

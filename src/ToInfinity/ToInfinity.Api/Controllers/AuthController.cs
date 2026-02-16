@@ -167,8 +167,8 @@ public class AuthController : ApiController
         var cookieOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.None, // Required for cross-origin requests
+            Secure = true, // Require HTTPS
+            SameSite = SameSiteMode.None, // Required for cross-origin with credentials
             Expires = DateTimeOffset.UtcNow.AddDays(7)
         };
 

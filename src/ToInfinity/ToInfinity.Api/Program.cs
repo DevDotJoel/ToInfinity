@@ -79,7 +79,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("frontend", policy =>
     {
-        policy.SetIsOriginAllowed(host => true) // Allow any origin in development
+        policy.WithOrigins("https://localhost:3000") // Specific frontend origin
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials(); // Required for cookies

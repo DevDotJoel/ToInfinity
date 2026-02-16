@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import Box from "@mui/material/Box";
-import Navbar from "../navbar/navbar";
+import AuthenticatedNavbar from "../navbar/authenticated-navbar";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -15,7 +15,7 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
         flexDirection: "column",
       }}
     >
-      <Navbar isLoggedIn={true} />
+      <AuthenticatedNavbar />
       <Box
         component="main"
         sx={{

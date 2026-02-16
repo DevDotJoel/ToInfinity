@@ -15,7 +15,8 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const { data: user, isLoading } = useUser();
+  // Fetch user on app load to check authentication status
+  const { data: user, isLoading } = useUser({ enabled: true });
 
   const value: AuthContextValue = {
     user,

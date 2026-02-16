@@ -1,5 +1,4 @@
 import { useMutation } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 import { useSnackbar } from "../../../libs/use-snackbar";
 import { queryClient } from "../../../libs/react-query";
 import type { MutationConfig } from "../../../libs/react-query";
@@ -10,14 +9,13 @@ type UseLogoutOptions = {
 };
 
 export const useLogout = ({ config }: UseLogoutOptions = {}) => {
-  const navigate = useNavigate();
   const { showSnackbar } = useSnackbar();
 
   return useMutation({
     onSuccess: () => {
+      // Clear user data and invalidate to trigger refetch
       queryClient.setQueryData(["user"], null);
-      queryClient.clear();
-      navigate("/auth/signin");
+      queryClient.invalidateQueries({ queryKey: ["user"] });
       showSnackbar("Logged out successfully", "info");
     },
     onError: (error: Error) => {

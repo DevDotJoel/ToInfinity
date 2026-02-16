@@ -23,15 +23,15 @@ export const publicRoutes = [
     element: <PublicApp />,
     children: [
       {
-        path: "/",
+        path: "home",
         element: <HomeRoutes />,
       },
       {
-        path: "/venues",
+        path: "venues",
         element: <VenuesRoutes />,
       },
       {
-        path: "/auth/*",
+        path: "auth/*",
         element: <AuthRoutes />,
       },
       { path: "*", element: <Navigate to="/" replace /> },

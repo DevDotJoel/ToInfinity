@@ -30,7 +30,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import { mockUser, mockQuoteRequests } from "../../lib/data";
 
 const navLinks = [
-  { label: "Home", href: "/" },
+  { label: "Home", href: "/home" },
   { label: "Venues", href: "/venues" },
   { label: "Catering", href: "/catering" },
 ];

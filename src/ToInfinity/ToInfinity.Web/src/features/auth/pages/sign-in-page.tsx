@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
@@ -21,15 +21,25 @@ import authWeddingImg from "../../../assets/auth-wedding.jpg";
 import { handleGoogleLogin } from "../api/google-auth";
 import { useLogin } from "../hooks/use-login";
 import { signInSchema, type SignInFormData } from "../schemas";
+import { queryClient } from "../../../libs/react-query";
 
 export default function SignInPage() {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [success, setSuccess] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const { mutate: login, isPending } = useLogin({
     config: {
-      onSuccess: () => {
+      onSuccess: async () => {
         setSuccess(true);
+        // Invalidate user query so AuthProvider refetches
+        await queryClient.invalidateQueries({
+          queryKey: ["user"],
+          refetchType: "active", // Wait for active query to refetch
+        });
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 1500);
       },
     },
   });

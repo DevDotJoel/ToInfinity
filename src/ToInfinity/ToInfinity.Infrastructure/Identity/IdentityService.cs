@@ -278,11 +278,21 @@ public class IdentityService : IIdentityService
             if (existingUser is null)
             {
                 // Create new user
+                var firstName = info.Principal.FindFirstValue(ClaimTypes.GivenName) 
+                    ?? info.Principal.FindFirstValue("given_name") 
+                    ?? string.Empty;
+                    
+                var lastName = info.Principal.FindFirstValue(ClaimTypes.Surname) 
+                    ?? info.Principal.FindFirstValue("family_name") 
+                    ?? string.Empty;
+                
                 user = new ApplicationUser
                 {
                     Id = Guid.NewGuid(),
                     Email = email,
                     UserName = email,
+                    FirstName = firstName,
+                    LastName = lastName,
                     EmailConfirmed = true // External providers verify email
                 };
 
