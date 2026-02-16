@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using ToInfinity.Domain.Entities;
 using ToInfinity.Domain.Shared;
 using ToInfinity.Infrastructure.Identity;
+using ToInfinity.Infrastructure.Identity.Subscriptions.Entities;
 
 namespace ToInfinity.Infrastructure.Persistence;
 
@@ -16,6 +17,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     }
 
     public DbSet<WeddingVenue> WeddingVenues => Set<WeddingVenue>();
+    public DbSet<Subscription> Subscriptions => Set<Subscription>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -2,6 +2,7 @@ using ErrorOr;
 using MapsterMapper;
 using MediatR;
 using ToInfinity.Application.Common.Persistence;
+using ToInfinity.Application.Common.Services;
 using ToInfinity.Application.Venues.Models;
 using ToInfinity.Domain.Entities;
 using ToInfinity.Domain.ValueObjects;
@@ -12,13 +13,16 @@ public class CreateWeddingVenueOnboardingCommandHandler
     : IRequestHandler<CreateWeddingVenueOnboardingCommand, ErrorOr<VenueDto>>
 {
     private readonly IWeddingVenueRepository _venueRepository;
+    private readonly ISubscriptionService _subscriptionService;
     private readonly IMapper _mapper;
 
     public CreateWeddingVenueOnboardingCommandHandler(
         IWeddingVenueRepository venueRepository,
+        ISubscriptionService subscriptionService,
         IMapper mapper)
     {
         _venueRepository = venueRepository;
+        _subscriptionService = subscriptionService;
         _mapper = mapper;
     }
 
@@ -27,6 +31,17 @@ public class CreateWeddingVenueOnboardingCommandHandler
         CancellationToken cancellationToken)
     {
         var userId = command.UserId;
+
+        // Check if user has an active subscription
+        var hasActiveSubscription = await _subscriptionService
+            .HasActiveSubscriptionAsync(userId.Value, cancellationToken);
+
+        if (!hasActiveSubscription)
+        {
+            return Error.Forbidden(
+                code: "Subscription.Required",
+                description: "An active subscription is required to create a venue.");
+        }
 
         var addressResult = Address.Create(command.Street, command.City);
         if (addressResult.IsError)
