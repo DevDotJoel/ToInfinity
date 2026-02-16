@@ -1,7 +1,7 @@
-using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ToInfinity.Application.Common.Identity;
+using ToInfinity.Application.Common.Services;
 using ToInfinity.Contracts.Auth;
 
 namespace ToInfinity.Api.Controllers;
@@ -10,14 +10,10 @@ namespace ToInfinity.Api.Controllers;
 public class AuthController : ApiController
 {
     private readonly IIdentityService _identityService;
-    private readonly IMapper _mapper;
 
-    public AuthController(
-        IIdentityService identityService,
-        IMapper mapper)
+    public AuthController(IIdentityService identityService)
     {
         _identityService = identityService;
-        _mapper = mapper;
     }
 
     [AllowAnonymous]
@@ -26,12 +22,23 @@ public class AuthController : ApiController
         RegisterRequest request,
         CancellationToken cancellationToken)
     {
-        var registerModel = _mapper.Map<Application.Auth.Models.RegisterModel>(request);
+        var registerModel = new Application.Auth.Models.RegisterModel(
+            request.Email,
+            request.Password,
+            request.FirstName,
+            request.LastName);
+
         var result = await _identityService.RegisterAsync(registerModel, cancellationToken);
 
-        return result.Match(
-            authResultModel => Ok(_mapper.Map<AuthResult>(authResultModel)),
-            errors => Problem(errors));
+        if (result.IsError)
+        {
+            return Problem(result.Errors);
+        }
+
+        // Set tokens in secure HttpOnly cookies
+        SetAuthCookies(result.Value.AccessToken, result.Value.RefreshToken);
+
+        return Ok(new AuthResult(result.Value.UserId, "Registration successful"));
     }
 
     [AllowAnonymous]
@@ -40,25 +47,128 @@ public class AuthController : ApiController
         LoginRequest request,
         CancellationToken cancellationToken)
     {
-        var loginModel = _mapper.Map<Application.Auth.Models.LoginModel>(request);
+        var loginModel = new Application.Auth.Models.LoginModel(
+            request.Email,
+            request.Password);
+
         var result = await _identityService.LoginAsync(loginModel, cancellationToken);
 
-        return result.Match(
-            authResultModel => Ok(_mapper.Map<AuthResult>(authResultModel)),
-            errors => Problem(errors));
+        if (result.IsError)
+        {
+            return Problem(result.Errors);
+        }
+
+        // Set tokens in secure HttpOnly cookies
+        SetAuthCookies(result.Value.AccessToken, result.Value.RefreshToken);
+
+        return Ok(new AuthResult(result.Value.UserId, "Login successful"));
     }
 
     [AllowAnonymous]
     [HttpPost("refresh")]
-    public async Task<IActionResult> RefreshToken(
-        RefreshTokenRequest request,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> RefreshToken(CancellationToken cancellationToken)
     {
-        var refreshModel = _mapper.Map<Application.Auth.Models.RefreshTokenModel>(request);
+        // Read tokens from cookies
+        if (!Request.Cookies.TryGetValue("accessToken", out var accessToken) ||
+            !Request.Cookies.TryGetValue("refreshToken", out var refreshToken))
+        {
+            return Unauthorized(new { Message = "No authentication tokens found" });
+        }
+
+        var refreshModel = new Application.Auth.Models.RefreshTokenModel(
+            accessToken,
+            refreshToken);
+
         var result = await _identityService.RefreshTokenAsync(refreshModel, cancellationToken);
 
+        if (result.IsError)
+        {
+            // Clear invalid cookies
+            ClearAuthCookies();
+            return Problem(result.Errors);
+        }
+
+        // Set new tokens in cookies
+        SetAuthCookies(result.Value.AccessToken, result.Value.RefreshToken);
+
+        return Ok(new { Message = "Token refreshed successfully" });
+    }
+
+    [Authorize]
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout(
+        [FromServices] IUserContext userContext,
+        CancellationToken cancellationToken)
+    {
+        var result = await _identityService.LogoutAsync(userContext.GetCurrentUserId(), cancellationToken);
+
+        // Clear cookies regardless of service result
+        ClearAuthCookies();
+
         return result.Match(
-            authResultModel => Ok(_mapper.Map<AuthResult>(authResultModel)),
+            _ => Ok(new { Message = "Logged out successfully" }),
             errors => Problem(errors));
+    }
+
+    [AllowAnonymous]
+    [HttpGet("external-login")]
+    public IActionResult ExternalLogin([FromQuery] string provider, [FromQuery] string returnUrl = "/")
+    {
+        var initiation = _identityService.InitiateExternalLogin(provider, returnUrl);
+        return Challenge((Microsoft.AspNetCore.Authentication.AuthenticationProperties)initiation.AuthenticationProperties, initiation.Provider);
+    }
+
+    [AllowAnonymous]
+    [HttpGet("external-callback")]
+    public async Task<IActionResult> ExternalCallback([FromQuery] string returnUrl = "/", CancellationToken cancellationToken = default)
+    {
+        var frontendUrl = _identityService.GetFrontendUrl();
+
+        var result = await _identityService.ExternalLoginAsync(cancellationToken);
+
+        if (result.IsError)
+        {
+            return Redirect($"{frontendUrl}/auth/error");
+        }
+
+        // Set tokens in secure HttpOnly cookies
+        SetAuthCookies(result.Value.AccessToken, result.Value.RefreshToken);
+
+        // Validate returnUrl to prevent open redirect attacks
+        var safeReturnUrl = ValidateReturnUrl(returnUrl);
+        return Redirect($"{frontendUrl}{safeReturnUrl}");
+    }
+
+    private void SetAuthCookies(string accessToken, string refreshToken)
+    {
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Lax, // Same domain setup
+            Expires = DateTimeOffset.UtcNow.AddDays(7)
+        };
+
+        Response.Cookies.Append("accessToken", accessToken, cookieOptions);
+        Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
+    }
+
+    private void ClearAuthCookies()
+    {
+        Response.Cookies.Delete("accessToken");
+        Response.Cookies.Delete("refreshToken");
+    }
+
+    private static string ValidateReturnUrl(string returnUrl)
+    {
+        // Only allow relative URLs starting with /
+        if (string.IsNullOrWhiteSpace(returnUrl) ||
+            !returnUrl.StartsWith('/') ||
+            returnUrl.StartsWith("//"))
+        {
+            return "/"; // Default to home
+        }
+
+        return returnUrl;
     }
 }

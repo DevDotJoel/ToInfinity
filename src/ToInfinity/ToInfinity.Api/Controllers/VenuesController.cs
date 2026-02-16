@@ -58,8 +58,14 @@ public class VenuesController : ApiController
 
         var result = await _mediator.Send(command, cancellationToken);
 
+        // Compensating transaction: Delete uploaded image if command failed
+        if (result.IsError)
+        {
+            await _fileStorageService.DeleteImageAsync(mainImageUrl, cancellationToken);
+        }
+
         return result.Match(
-            Ok,
+            venueDto => Ok(),
             errors => Problem(errors));
     }
 }
