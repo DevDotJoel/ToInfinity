@@ -33,13 +33,15 @@ const Navbar = () => {
   return (
     <>
       <AppBar
-        position="sticky"
+        position="fixed"
         elevation={0}
         sx={{
           backgroundColor: "rgba(253, 252, 251, 0.92)",
           backdropFilter: "blur(12px)",
           borderBottom: "1px solid",
           borderColor: "rgba(61, 47, 37, 0.08)",
+          top: 0,
+          zIndex: 1100,
         }}
       >
         <Container maxWidth="lg">
