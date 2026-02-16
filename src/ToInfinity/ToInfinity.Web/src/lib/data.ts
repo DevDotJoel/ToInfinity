@@ -79,3 +79,30 @@ export const catering = [
     image: '',
   },
 ];
+
+export const mockUser = {
+  firstName: 'John',
+  lastName: 'Doe',
+  email: 'john.doe@example.com',
+};
+
+export const mockQuoteRequests = [
+  {
+    id: '1',
+    venueId: '1',
+    status: 'replied',
+    createdAt: '2026-02-10',
+  },
+  {
+    id: '2',
+    venueId: '2',
+    status: 'replied',
+    createdAt: '2026-02-12',
+  },
+  {
+    id: '3',
+    venueId: '3',
+    status: 'pending',
+    createdAt: '2026-02-14',
+  },
+];

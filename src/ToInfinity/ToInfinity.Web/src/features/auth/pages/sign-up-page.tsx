@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Link as RouterLink } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -9,14 +11,19 @@ import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import Alert from "@mui/material/Alert";
+import FormHelperText from "@mui/material/FormHelperText";
 import LinearProgress from "@mui/material/LinearProgress";
+import CircularProgress from "@mui/material/CircularProgress";
+import Fade from "@mui/material/Fade";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import GoogleIcon from "@mui/icons-material/Google";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import authWeddingImg from "../assets/auth-wedding.jpg";
+import authWeddingImg from "../../../assets/auth-wedding.jpg";
+import { handleGoogleLogin } from "../api/google-auth";
+import { useRegister } from "../hooks/use-register";
+import { signUpSchema, type SignUpFormData } from "../schemas";
 
 function getPasswordStrength(password: string) {
   let score = 0;
@@ -36,39 +43,54 @@ function strengthLabel(score: number) {
 }
 
 export default function SignUpPage() {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [agreeTerms, setAgreeTerms] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const { mutate: register, isPending } = useRegister({
+    config: {
+      onSuccess: () => {
+        setSuccess(true);
+      },
+    },
+  });
 
-  const strength = getPasswordStrength(password);
+  const {
+    control,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      agreeTerms: false,
+    },
+  });
+
+  const password = watch("password");
+  const strength = getPasswordStrength(password || "");
   const { label: strengthText, color: strengthColor } = strengthLabel(strength);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    if (!firstName || !lastName || !email || !password) {
-      setError("Please fill in all fields.");
-      return;
-    }
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
-      return;
-    }
-    if (!agreeTerms) {
-      setError("Please agree to the terms and conditions.");
-      return;
-    }
-    setLoading(true);
-    setTimeout(() => setLoading(false), 1500);
+  const onSubmit = (data: SignUpFormData) => {
+    register({
+      email: data.email,
+      password: data.password,
+      confirmPassword: data.password,
+      firstName: data.firstName,
+      lastName: data.lastName,
+    });
   };
 
-  const handleGoogleSignUp = () => {
-    // Google OAuth integration placeholder
+  const handleGoogleSignUp = async () => {
+    setGoogleLoading(true);
+    try {
+      await handleGoogleLogin("/");
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   const fieldSx = {
@@ -98,8 +120,58 @@ export default function SignUpPage() {
         minHeight: "100vh",
         display: "flex",
         flexDirection: { xs: "column", md: "row" },
+        position: "relative",
       }}
     >
+      {/* Success Overlay */}
+      <Fade in={success}>
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 10,
+            display: success ? "flex" : "none",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            bgcolor: "background.paper",
+          }}
+        >
+          <Box
+            sx={{
+              width: 56,
+              height: 56,
+              borderRadius: "50%",
+              bgcolor: "rgba(196, 114, 78, 0.1)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              mb: 2,
+            }}
+          >
+            <FavoriteIcon sx={{ color: "secondary.main", fontSize: 28 }} />
+          </Box>
+          <Typography
+            variant="h5"
+            sx={{
+              fontFamily: "'Playfair Display', serif",
+              fontWeight: 700,
+              color: "text.primary",
+              mb: 0.5,
+            }}
+          >
+            Account created successfully!
+          </Typography>
+          <Typography sx={{ color: "text.secondary", fontSize: "0.95rem" }}>
+            Redirecting to your dashboard...
+          </Typography>
+          <CircularProgress
+            size={20}
+            sx={{ mt: 2, color: "secondary.main" }}
+          />
+        </Box>
+      </Fade>
+
       {/* Left side - Image panel */}
       <Box
         sx={{
@@ -254,7 +326,14 @@ export default function SignUpPage() {
           <Button
             fullWidth
             variant="outlined"
-            startIcon={<GoogleIcon />}
+            disabled={isPending || googleLoading}
+            startIcon={
+              googleLoading ? (
+                <CircularProgress size={18} sx={{ color: "secondary.main" }} />
+              ) : (
+                <GoogleIcon />
+              )
+            }
             onClick={handleGoogleSignUp}
             sx={{
               py: 1.4,
@@ -269,9 +348,12 @@ export default function SignUpPage() {
                 borderColor: "secondary.main",
                 bgcolor: "rgba(196, 114, 78, 0.04)",
               },
+              "&:disabled": {
+                borderColor: "rgba(61, 47, 37, 0.1)",
+              },
             }}
           >
-            Continue with Google
+            {googleLoading ? "Connecting..." : "Continue with Google"}
           </Button>
 
           {/* Divider */}
@@ -294,19 +376,8 @@ export default function SignUpPage() {
             </Typography>
           </Divider>
 
-          {/* Error */}
-          {error && (
-            <Alert
-              severity="error"
-              onClose={() => setError("")}
-              sx={{ mb: 2.5, borderRadius: 2 }}
-            >
-              {error}
-            </Alert>
-          )}
-
           {/* Form */}
-          <Box component="form" onSubmit={handleSubmit} noValidate>
+          <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
             {/* Name row */}
             <Box sx={{ display: "flex", gap: 2, mb: 2.5 }}>
               <Box sx={{ flex: 1 }}>
@@ -323,14 +394,21 @@ export default function SignUpPage() {
                 >
                   First name
                 </Typography>
-                <TextField
-                  id="firstName"
-                  placeholder="Jane"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  fullWidth
-                  size="small"
-                  sx={fieldSx}
+                <Controller
+                  name="firstName"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      id="firstName"
+                      placeholder="Jane"
+                      fullWidth
+                      size="small"
+                      error={!!errors.firstName}
+                      helperText={errors.firstName?.message}
+                      sx={fieldSx}
+                    />
+                  )}
                 />
               </Box>
               <Box sx={{ flex: 1 }}>
@@ -347,14 +425,21 @@ export default function SignUpPage() {
                 >
                   Last name
                 </Typography>
-                <TextField
-                  id="lastName"
-                  placeholder="Doe"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  fullWidth
-                  size="small"
-                  sx={fieldSx}
+                <Controller
+                  name="lastName"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      id="lastName"
+                      placeholder="Doe"
+                      fullWidth
+                      size="small"
+                      error={!!errors.lastName}
+                      helperText={errors.lastName?.message}
+                      sx={fieldSx}
+                    />
+                  )}
                 />
               </Box>
             </Box>
@@ -373,15 +458,22 @@ export default function SignUpPage() {
             >
               Email address
             </Typography>
-            <TextField
-              id="signupEmail"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              fullWidth
-              size="small"
-              sx={{ ...fieldSx, mb: 2.5 }}
+            <Controller
+              name="email"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  id="signupEmail"
+                  type="email"
+                  placeholder="you@example.com"
+                  fullWidth
+                  size="small"
+                  error={!!errors.email}
+                  helperText={errors.email?.message}
+                  sx={{ ...fieldSx, mb: 2.5 }}
+                />
+              )}
             />
 
             {/* Password */}
@@ -398,43 +490,50 @@ export default function SignUpPage() {
             >
               Password
             </Typography>
-            <TextField
-              id="signupPassword"
-              type={showPassword ? "text" : "password"}
-              placeholder="Min. 8 characters"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              fullWidth
-              size="small"
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                      size="small"
-                      aria-label={
-                        showPassword ? "Hide password" : "Show password"
-                      }
-                    >
-                      {showPassword ? (
-                        <VisibilityOffIcon
-                          sx={{ fontSize: 20, color: "text.secondary" }}
-                        />
-                      ) : (
-                        <VisibilityIcon
-                          sx={{ fontSize: 20, color: "text.secondary" }}
-                        />
-                      )}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ ...fieldSx, mb: 1 }}
+            <Controller
+              name="password"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  id="signupPassword"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Min. 8 characters"
+                  fullWidth
+                  size="small"
+                  error={!!errors.password}
+                  helperText={errors.password?.message}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                          size="small"
+                          aria-label={
+                            showPassword ? "Hide password" : "Show password"
+                          }
+                        >
+                          {showPassword ? (
+                            <VisibilityOffIcon
+                              sx={{ fontSize: 20, color: "text.secondary" }}
+                            />
+                          ) : (
+                            <VisibilityIcon
+                              sx={{ fontSize: 20, color: "text.secondary" }}
+                            />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{ ...fieldSx, mb: 1 }}
+                />
+              )}
             />
 
             {/* Password strength meter */}
-            {password.length > 0 && (
+            {(password?.length ?? 0) > 0 && (
               <Box sx={{ mb: 2.5 }}>
                 <LinearProgress
                   variant="determinate"
@@ -468,9 +567,9 @@ export default function SignUpPage() {
                   </Typography>
                   <Box sx={{ display: "flex", gap: 1.5 }}>
                     {[
-                      { met: password.length >= 8, label: "8+ chars" },
-                      { met: /[A-Z]/.test(password), label: "Uppercase" },
-                      { met: /[0-9]/.test(password), label: "Number" },
+                      { met: (password?.length ?? 0) >= 8, label: "8+ chars" },
+                      { met: /[A-Z]/.test(password || ""), label: "Uppercase" },
+                      { met: /[0-9]/.test(password || ""), label: "Number" },
                     ].map((rule) => (
                       <Box
                         key={rule.label}
@@ -498,54 +597,74 @@ export default function SignUpPage() {
             )}
 
             {/* Terms */}
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={agreeTerms}
-                  onChange={(e) => setAgreeTerms(e.target.checked)}
-                  size="small"
+            <Controller
+              name="agreeTerms"
+              control={control}
+              render={({ field }) => (
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      {...field}
+                      checked={field.value}
+                      size="small"
+                      sx={{
+                        color: "rgba(61, 47, 37, 0.3)",
+                        "&.Mui-checked": { color: "secondary.main" },
+                      }}
+                    />
+                  }
+                  label={
+                    <Typography
+                      sx={{ fontSize: "0.83rem", color: "text.secondary" }}
+                    >
+                      {"I agree to the "}
+                      <RouterLink
+                        to="/terms"
+                        style={{
+                          color: "#c4724e",
+                          textDecoration: "none",
+                          fontWeight: 500,
+                        }}
+                      >
+                        Terms of Service
+                      </RouterLink>
+                      {" and "}
+                      <RouterLink
+                        to="/privacy"
+                        style={{
+                          color: "#c4724e",
+                          textDecoration: "none",
+                          fontWeight: 500,
+                        }}
+                      >
+                        Privacy Policy
+                      </RouterLink>
+                    </Typography>
+                  }
                   sx={{
-                    color: "rgba(61, 47, 37, 0.3)",
-                    "&.Mui-checked": { color: "secondary.main" },
+                    mb: errors.agreeTerms ? 0.5 : 3,
+                    alignItems: "flex-start",
+                    mt: -0.5,
                   }}
                 />
-              }
-              label={
-                <Typography
-                  sx={{ fontSize: "0.83rem", color: "text.secondary" }}
-                >
-                  {"I agree to the "}
-                  <RouterLink
-                    to="/terms"
-                    style={{
-                      color: "#c4724e",
-                      textDecoration: "none",
-                      fontWeight: 500,
-                    }}
-                  >
-                    Terms of Service
-                  </RouterLink>
-                  {" and "}
-                  <RouterLink
-                    to="/privacy"
-                    style={{
-                      color: "#c4724e",
-                      textDecoration: "none",
-                      fontWeight: 500,
-                    }}
-                  >
-                    Privacy Policy
-                  </RouterLink>
-                </Typography>
-              }
-              sx={{ mb: 3, alignItems: "flex-start", mt: -0.5 }}
+              )}
             />
+            {errors.agreeTerms && (
+              <FormHelperText error sx={{ mt: -2, mb: 2.5 }}>
+                {errors.agreeTerms.message}
+              </FormHelperText>
+            )}
 
             <Button
               type="submit"
               fullWidth
               variant="contained"
-              disabled={loading}
+              disabled={isPending}
+              startIcon={
+                isPending ? (
+                  <CircularProgress size={18} sx={{ color: "#fff" }} />
+                ) : undefined
+              }
               sx={{
                 py: 1.4,
                 bgcolor: "secondary.main",
@@ -565,7 +684,7 @@ export default function SignUpPage() {
                 },
               }}
             >
-              {loading ? "Creating account..." : "Create Account"}
+              {isPending ? "Creating account..." : "Sign Up"}
             </Button>
           </Box>
 
@@ -580,7 +699,7 @@ export default function SignUpPage() {
           >
             Already have an account?{" "}
             <RouterLink
-              to="/signin"
+              to="/auth/signin"
               style={{
                 color: "#c4724e",
                 fontWeight: 600,

@@ -5,9 +5,12 @@ import Footer from "./footer";
 
 const Layout = () => {
   return (
-    <Box sx={{ width: "100%", overflow: "hidden" }}>
+    <Box sx={{ width: "100%", overflowX: "hidden" }}>
       <Navbar />
-      <Box component="main" sx={{ width: "100%" }}>
+      <Box
+        component="main"
+        sx={{ width: "100%", pt: { xs: "64px", md: "72px" } }}
+      >
         <Outlet />
       </Box>
       <Footer />

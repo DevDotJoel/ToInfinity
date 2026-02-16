@@ -40,7 +40,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
-import { venues, venueTypes } from "../lib/data";
+import { venues, venueTypes } from "../../../lib/data";
 
 const SIDEBAR_WIDTH = 280;
 

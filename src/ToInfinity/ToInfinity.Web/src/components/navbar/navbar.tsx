@@ -10,13 +10,24 @@ import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
+import ListItemIcon from "@mui/material/ListItemIcon";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
+import Avatar from "@mui/material/Avatar";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import Divider from "@mui/material/Divider";
+import Badge from "@mui/material/Badge";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import FavoriteIcon from "@mui/icons-material/Favorite";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import SettingsIcon from "@mui/icons-material/Settings";
+import LogoutIcon from "@mui/icons-material/Logout";
+import { mockUser, mockQuoteRequests } from "../../lib/data";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -24,22 +35,55 @@ const navLinks = [
   { label: "Catering", href: "/catering" },
 ];
 
-const Navbar = () => {
+interface NavbarProps {
+  isLoggedIn?: boolean;
+}
+
+const Navbar = ({ isLoggedIn = false }: NavbarProps) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const menuOpen = Boolean(anchorEl);
   const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
+  const pendingCount = mockQuoteRequests.filter(
+    (q) => q.status === "replied",
+  ).length;
+
+  const initials = mockUser.firstName.charAt(0) + mockUser.lastName.charAt(0);
+
+  const userMenuItems = [
+    {
+      label: "Dashboard",
+      icon: <DashboardIcon sx={{ fontSize: 20 }} />,
+      href: "/dashboard",
+    },
+    {
+      label: "My Quotes",
+      icon: <ReceiptLongIcon sx={{ fontSize: 20 }} />,
+      href: "/dashboard",
+      badge: pendingCount,
+    },
+    {
+      label: "Account Settings",
+      icon: <SettingsIcon sx={{ fontSize: 20 }} />,
+      href: "/dashboard",
+    },
+  ];
+
   return (
     <>
       <AppBar
-        position="sticky"
+        position="fixed"
         elevation={0}
         sx={{
           backgroundColor: "rgba(253, 252, 251, 0.92)",
           backdropFilter: "blur(12px)",
           borderBottom: "1px solid",
           borderColor: "rgba(61, 47, 37, 0.08)",
+          top: 0,
+          zIndex: 1100,
         }}
       >
         <Container maxWidth="lg">
@@ -111,50 +155,238 @@ const Navbar = () => {
                     {link.label}
                   </Button>
                 ))}
-                <Button
-                  component={RouterLink}
-                  to="/signin"
-                  sx={{
-                    ml: 1,
-                    color: "text.primary",
-                    fontWeight: 500,
-                    fontSize: "0.95rem",
-                    textTransform: "none",
-                    "&:hover": {
-                      backgroundColor: "rgba(61, 47, 37, 0.04)",
-                      color: "secondary.main",
-                    },
-                  }}
-                >
-                  Sign In
-                </Button>
-                <Button
-                  variant="contained"
-                  component={RouterLink}
-                  to="/signup"
-                  sx={{
-                    ml: 0.5,
-                    bgcolor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: 600,
-                    fontSize: "0.95rem",
-                    textTransform: "none",
-                    px: 3,
-                    borderRadius: 2,
-                    "&:hover": { bgcolor: "secondary.dark" },
-                  }}
-                >
-                  Sign Up
-                </Button>
+
+                {isLoggedIn ? (
+                  <>
+                    <IconButton
+                      onClick={(e) => setAnchorEl(e.currentTarget)}
+                      sx={{ ml: 1 }}
+                      aria-label="Open account menu"
+                      aria-controls={menuOpen ? "account-menu" : undefined}
+                      aria-haspopup="true"
+                      aria-expanded={menuOpen ? "true" : undefined}
+                    >
+                      <Badge
+                        badgeContent={pendingCount}
+                        color="error"
+                        overlap="circular"
+                        sx={{
+                          "& .MuiBadge-badge": {
+                            fontSize: "0.65rem",
+                            height: 18,
+                            minWidth: 18,
+                            bgcolor: "secondary.main",
+                          },
+                        }}
+                      >
+                        <Avatar
+                          sx={{
+                            width: 38,
+                            height: 38,
+                            bgcolor: "primary.main",
+                            fontSize: "0.85rem",
+                            fontWeight: 700,
+                            border: "2px solid",
+                            borderColor: "rgba(196,114,78,0.3)",
+                          }}
+                        >
+                          {initials}
+                        </Avatar>
+                      </Badge>
+                    </IconButton>
+
+                    <Menu
+                      id="account-menu"
+                      anchorEl={anchorEl}
+                      open={menuOpen}
+                      onClose={() => setAnchorEl(null)}
+                      onClick={() => setAnchorEl(null)}
+                      transformOrigin={{ horizontal: "right", vertical: "top" }}
+                      anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+                      PaperProps={{
+                        sx: {
+                          mt: 1,
+                          minWidth: 240,
+                          borderRadius: 2.5,
+                          boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                          border: "1px solid",
+                          borderColor: "rgba(61,47,37,0.06)",
+                        },
+                      }}
+                    >
+                      {/* User info header */}
+                      <Box sx={{ px: 2.5, py: 2 }}>
+                        <Typography
+                          sx={{
+                            fontWeight: 700,
+                            color: "primary.main",
+                            fontSize: "0.95rem",
+                          }}
+                        >
+                          {mockUser.firstName} {mockUser.lastName}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "text.secondary", fontSize: "0.82rem" }}
+                        >
+                          {mockUser.email}
+                        </Typography>
+                      </Box>
+
+                      <Divider />
+
+                      {userMenuItems.map((item) => (
+                        <MenuItem
+                          key={item.label}
+                          component={RouterLink}
+                          to={item.href}
+                          sx={{
+                            py: 1.3,
+                            px: 2.5,
+                            gap: 1.5,
+                            fontSize: "0.9rem",
+                            color: "text.primary",
+                            "&:hover": {
+                              bgcolor: "rgba(196,114,78,0.06)",
+                              color: "secondary.main",
+                            },
+                          }}
+                        >
+                          <ListItemIcon
+                            sx={{ minWidth: "auto", color: "inherit" }}
+                          >
+                            {item.badge ? (
+                              <Badge
+                                badgeContent={item.badge}
+                                sx={{
+                                  "& .MuiBadge-badge": {
+                                    bgcolor: "secondary.main",
+                                    color: "#fff",
+                                    fontSize: "0.6rem",
+                                    height: 16,
+                                    minWidth: 16,
+                                  },
+                                }}
+                              >
+                                {item.icon}
+                              </Badge>
+                            ) : (
+                              item.icon
+                            )}
+                          </ListItemIcon>
+                          {item.label}
+                        </MenuItem>
+                      ))}
+
+                      <Divider />
+
+                      <MenuItem
+                        component={RouterLink}
+                        to="/"
+                        sx={{
+                          py: 1.3,
+                          px: 2.5,
+                          gap: 1.5,
+                          fontSize: "0.9rem",
+                          color: "text.secondary",
+                          "&:hover": {
+                            bgcolor: "rgba(196,114,78,0.06)",
+                            color: "secondary.main",
+                          },
+                        }}
+                      >
+                        <ListItemIcon
+                          sx={{ minWidth: "auto", color: "inherit" }}
+                        >
+                          <LogoutIcon sx={{ fontSize: 20 }} />
+                        </ListItemIcon>
+                        Sign Out
+                      </MenuItem>
+                    </Menu>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      component={RouterLink}
+                      to="/auth/signin"
+                      sx={{
+                        ml: 1,
+                        color: "text.primary",
+                        fontWeight: 500,
+                        fontSize: "0.95rem",
+                        textTransform: "none",
+                        "&:hover": {
+                          backgroundColor: "rgba(61, 47, 37, 0.04)",
+                          color: "secondary.main",
+                        },
+                      }}
+                    >
+                      Sign In
+                    </Button>
+                    <Button
+                      variant="contained"
+                      component={RouterLink}
+                      to="/auth/signup"
+                      sx={{
+                        ml: 0.5,
+                        bgcolor: "secondary.main",
+                        color: "#fff",
+                        fontWeight: 600,
+                        fontSize: "0.95rem",
+                        textTransform: "none",
+                        px: 3,
+                        borderRadius: 2,
+                        "&:hover": { bgcolor: "secondary.dark" },
+                      }}
+                    >
+                      Sign Up
+                    </Button>
+                  </>
+                )}
               </Box>
             ) : (
-              <IconButton
-                onClick={() => setDrawerOpen(true)}
-                sx={{ color: "primary.main" }}
-                aria-label="Open navigation menu"
-              >
-                <MenuIcon />
-              </IconButton>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                {isLoggedIn && (
+                  <IconButton
+                    component={RouterLink}
+                    to="/dashboard"
+                    sx={{ color: "primary.main" }}
+                    aria-label="Go to dashboard"
+                  >
+                    <Badge
+                      badgeContent={pendingCount}
+                      sx={{
+                        "& .MuiBadge-badge": {
+                          bgcolor: "secondary.main",
+                          color: "#fff",
+                          fontSize: "0.6rem",
+                          height: 16,
+                          minWidth: 16,
+                        },
+                      }}
+                    >
+                      <Avatar
+                        sx={{
+                          width: 32,
+                          height: 32,
+                          bgcolor: "primary.main",
+                          fontSize: "0.75rem",
+                          fontWeight: 700,
+                        }}
+                      >
+                        {initials}
+                      </Avatar>
+                    </Badge>
+                  </IconButton>
+                )}
+                <IconButton
+                  onClick={() => setDrawerOpen(true)}
+                  sx={{ color: "primary.main" }}
+                  aria-label="Open navigation menu"
+                >
+                  <MenuIcon />
+                </IconButton>
+              </Box>
             )}
           </Toolbar>
         </Container>
@@ -166,7 +398,7 @@ const Navbar = () => {
         onClose={() => setDrawerOpen(false)}
         PaperProps={{
           sx: {
-            width: 280,
+            width: 300,
             bgcolor: "background.paper",
             pt: 2,
           },
@@ -180,6 +412,52 @@ const Navbar = () => {
             <CloseIcon />
           </IconButton>
         </Box>
+
+        {isLoggedIn && (
+          <Box
+            sx={{
+              px: 3,
+              pb: 2,
+              mb: 1,
+              borderBottom: "1px solid",
+              borderColor: "rgba(61,47,37,0.08)",
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+            }}
+          >
+            <Avatar
+              sx={{
+                width: 42,
+                height: 42,
+                bgcolor: "primary.main",
+                fontSize: "0.9rem",
+                fontWeight: 700,
+              }}
+            >
+              {initials}
+            </Avatar>
+            <Box>
+              <Typography
+                sx={{
+                  fontWeight: 700,
+                  color: "primary.main",
+                  fontSize: "0.95rem",
+                  lineHeight: 1.2,
+                }}
+              >
+                {mockUser.firstName} {mockUser.lastName}
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{ color: "text.secondary", fontSize: "0.78rem" }}
+              >
+                {mockUser.email}
+              </Typography>
+            </Box>
+          </Box>
+        )}
+
         <List>
           {navLinks.map((link) => (
             <ListItem key={link.href} disablePadding>
@@ -208,7 +486,52 @@ const Navbar = () => {
               </ListItemButton>
             </ListItem>
           ))}
+
+          {isLoggedIn && (
+            <>
+              <Divider sx={{ my: 1 }} />
+              {userMenuItems.map((item) => (
+                <ListItem key={item.label} disablePadding>
+                  <ListItemButton
+                    component={RouterLink}
+                    to={item.href}
+                    onClick={() => setDrawerOpen(false)}
+                    sx={{
+                      px: 3,
+                      py: 1.3,
+                      gap: 1.5,
+                      "&:hover": {
+                        bgcolor: "rgba(196,114,78,0.06)",
+                        color: "secondary.main",
+                      },
+                    }}
+                  >
+                    <ListItemIcon sx={{ minWidth: "auto", color: "inherit" }}>
+                      {item.icon}
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={item.label}
+                      primaryTypographyProps={{ fontSize: "0.95rem" }}
+                    />
+                    {item.badge ? (
+                      <Badge
+                        badgeContent={item.badge}
+                        sx={{
+                          "& .MuiBadge-badge": {
+                            bgcolor: "secondary.main",
+                            color: "#fff",
+                            fontSize: "0.6rem",
+                          },
+                        }}
+                      />
+                    ) : null}
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </>
+          )}
         </List>
+
         <Box
           sx={{
             px: 3,
@@ -218,46 +541,74 @@ const Navbar = () => {
             gap: 1.5,
           }}
         >
-          <Button
-            variant="contained"
-            fullWidth
-            component={RouterLink}
-            to="/signup"
-            onClick={() => setDrawerOpen(false)}
-            sx={{
-              bgcolor: "secondary.main",
-              color: "#fff",
-              fontWeight: 600,
-              textTransform: "none",
-              py: 1.2,
-              borderRadius: 2,
-              "&:hover": { bgcolor: "secondary.dark" },
-            }}
-          >
-            Sign Up
-          </Button>
-          <Button
-            fullWidth
-            component={RouterLink}
-            to="/signin"
-            onClick={() => setDrawerOpen(false)}
-            sx={{
-              color: "text.primary",
-              fontWeight: 500,
-              textTransform: "none",
-              py: 1.2,
-              borderRadius: 2,
-              border: "1px solid",
-              borderColor: "rgba(61, 47, 37, 0.15)",
-              "&:hover": {
-                borderColor: "secondary.main",
-                color: "secondary.main",
-                backgroundColor: "rgba(196, 114, 78, 0.04)",
-              },
-            }}
-          >
-            Sign In
-          </Button>
+          {isLoggedIn ? (
+            <Button
+              fullWidth
+              component={RouterLink}
+              to="/"
+              onClick={() => setDrawerOpen(false)}
+              startIcon={<LogoutIcon />}
+              sx={{
+                color: "text.secondary",
+                fontWeight: 500,
+                textTransform: "none",
+                py: 1.2,
+                borderRadius: 2,
+                border: "1px solid",
+                borderColor: "rgba(61, 47, 37, 0.15)",
+                "&:hover": {
+                  borderColor: "secondary.main",
+                  color: "secondary.main",
+                  backgroundColor: "rgba(196, 114, 78, 0.04)",
+                },
+              }}
+            >
+              Sign Out
+            </Button>
+          ) : (
+            <>
+              <Button
+                variant="contained"
+                fullWidth
+                component={RouterLink}
+                to="/auth/signup"
+                onClick={() => setDrawerOpen(false)}
+                sx={{
+                  bgcolor: "secondary.main",
+                  color: "#fff",
+                  fontWeight: 600,
+                  textTransform: "none",
+                  py: 1.2,
+                  borderRadius: 2,
+                  "&:hover": { bgcolor: "secondary.dark" },
+                }}
+              >
+                Sign Up
+              </Button>
+              <Button
+                fullWidth
+                component={RouterLink}
+                to="/auth/signin"
+                onClick={() => setDrawerOpen(false)}
+                sx={{
+                  color: "text.primary",
+                  fontWeight: 500,
+                  textTransform: "none",
+                  py: 1.2,
+                  borderRadius: 2,
+                  border: "1px solid",
+                  borderColor: "rgba(61, 47, 37, 0.15)",
+                  "&:hover": {
+                    borderColor: "secondary.main",
+                    color: "secondary.main",
+                    backgroundColor: "rgba(196, 114, 78, 0.04)",
+                  },
+                }}
+              >
+                Sign In
+              </Button>
+            </>
+          )}
         </Box>
       </Drawer>
     </>
