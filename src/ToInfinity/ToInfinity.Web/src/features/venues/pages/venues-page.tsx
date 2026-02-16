@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
@@ -14,7 +14,6 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import Slider from "@mui/material/Slider";
 import Paper from "@mui/material/Paper";
 import Drawer from "@mui/material/Drawer";
 import Button from "@mui/material/Button";
@@ -86,46 +85,51 @@ export default function VenuesPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Filter state
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState<number[]>([0, 25000]);
   const [sortBy, setSortBy] = useState("rating");
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [favorites, setFavorites] = useState<string[]>([]);
 
   // Collapsible sidebar sections
   const [typeOpen, setTypeOpen] = useState(true);
-  const [priceOpen, setPriceOpen] = useState(true);
 
-  const handleTypeToggle = (type: string) => {
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchInput);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  const handleTypeToggle = useCallback((type: string) => {
     setSelectedTypes((prev) =>
       prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
     );
-  };
+  }, []);
 
-  const handleFavoriteToggle = (id: string) => {
+  const handleFavoriteToggle = useCallback((id: string) => {
     setFavorites((prev) =>
       prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id],
     );
-  };
+  }, []);
 
-  const activeFilterCount = [
-    selectedTypes.length > 0,
-    priceRange[0] > 0 || priceRange[1] < 25000,
-  ].filter(Boolean).length;
+  const activeFilterCount = [selectedTypes.length > 0].filter(Boolean).length;
 
-  const clearAllFilters = () => {
+  const clearAllFilters = useCallback(() => {
     setSelectedTypes([]);
-    setPriceRange([0, 25000]);
-  };
+  }, []);
 
   const filtered = useMemo(() => {
-    const result = [...venues].filter((v) => {
-      const matchesSearch = v.name.toLowerCase().includes(search.toLowerCase());
+    const searchLower = search.toLowerCase();
+    const result = venues.filter((v) => {
+      const matchesSearch =
+        !search || v.name.toLowerCase().includes(searchLower);
       const matchesType =
         selectedTypes.length === 0 || selectedTypes.includes(v.type);
-      const matchesPrice = v.price >= priceRange[0] && v.price <= priceRange[1];
-      return matchesSearch && matchesType && matchesPrice;
+      return matchesSearch && matchesType;
     });
 
     if (sortBy === "rating") {
@@ -139,7 +143,7 @@ export default function VenuesPage() {
     }
 
     return result;
-  }, [search, selectedTypes, priceRange, sortBy]);
+  }, [search, selectedTypes, sortBy]);
 
   /* ---- Sidebar Filter Content ---- */
   const filterContent = (
@@ -238,58 +242,6 @@ export default function VenuesPage() {
       </Collapse>
 
       <Divider sx={{ mb: 1.5 }} />
-
-      {/* Price Range */}
-      <SectionHeader
-        label="Price Range"
-        open={priceOpen}
-        onToggle={() => setPriceOpen(!priceOpen)}
-      />
-      <Collapse in={priceOpen}>
-        <Box sx={{ px: 0.5, pt: 0.5, pb: 2 }}>
-          <Typography
-            variant="caption"
-            sx={{
-              color: "text.secondary",
-              display: "block",
-              mb: 1.5,
-              fontSize: "0.82rem",
-            }}
-          >
-            {priceRange[0].toLocaleString("de-DE")} € -{" "}
-            {priceRange[1].toLocaleString("de-DE")} €
-          </Typography>
-          <Slider
-            value={priceRange}
-            onChange={(_, val) => setPriceRange(val as number[])}
-            min={0}
-            max={25000}
-            step={500}
-            valueLabelDisplay="auto"
-            valueLabelFormat={(v) => `${v.toLocaleString("de-DE")}€`}
-            sx={{
-              color: "secondary.main",
-              "& .MuiSlider-thumb": {
-                width: 18,
-                height: 18,
-                bgcolor: "#fff",
-                border: "2px solid",
-                borderColor: "secondary.main",
-                "&:hover": {
-                  boxShadow: "0 0 0 6px rgba(196,114,78,0.15)",
-                },
-              },
-              "& .MuiSlider-track": {
-                height: 4,
-              },
-              "& .MuiSlider-rail": {
-                height: 4,
-                bgcolor: "rgba(61,47,37,0.12)",
-              },
-            }}
-          />
-        </Box>
-      </Collapse>
     </Box>
   );
 
@@ -756,8 +708,8 @@ export default function VenuesPage() {
               fullWidth
               size="small"
               placeholder="Search venue by name..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               slotProps={{
                 input: {
                   startAdornment: (
@@ -845,9 +797,7 @@ export default function VenuesPage() {
           </Box>
 
           {/* Active filter chips */}
-          {(selectedTypes.length > 0 ||
-            priceRange[0] > 0 ||
-            priceRange[1] < 25000) && (
+          {selectedTypes.length > 0 && (
             <Box
               sx={{
                 display: "flex",
@@ -885,24 +835,6 @@ export default function VenuesPage() {
                   }}
                 />
               ))}
-              {(priceRange[0] > 0 || priceRange[1] < 25000) && (
-                <Chip
-                  label={`${priceRange[0].toLocaleString("de-DE")}€ - ${priceRange[1].toLocaleString("de-DE")}€`}
-                  size="small"
-                  onDelete={() => setPriceRange([0, 25000])}
-                  sx={{
-                    bgcolor: "rgba(196,114,78,0.1)",
-                    color: "secondary.dark",
-                    fontWeight: 600,
-                    fontSize: "0.75rem",
-                    height: 26,
-                    "& .MuiChip-deleteIcon": {
-                      color: "secondary.main",
-                      fontSize: 16,
-                    },
-                  }}
-                />
-              )}
               <Button
                 size="small"
                 onClick={clearAllFilters}
@@ -1013,6 +945,7 @@ export default function VenuesPage() {
                 <Button
                   variant="outlined"
                   onClick={() => {
+                    setSearchInput("");
                     setSearch("");
                     clearAllFilters();
                   }}

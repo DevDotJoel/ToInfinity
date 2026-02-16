@@ -165,10 +165,7 @@ export default function SignUpPage() {
           <Typography sx={{ color: "text.secondary", fontSize: "0.95rem" }}>
             Redirecting to your dashboard...
           </Typography>
-          <CircularProgress
-            size={20}
-            sx={{ mt: 2, color: "secondary.main" }}
-          />
+          <CircularProgress size={20} sx={{ mt: 2, color: "secondary.main" }} />
         </Box>
       </Fade>
 
