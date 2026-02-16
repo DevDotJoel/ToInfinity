@@ -1,0 +1,597 @@
+import { useState } from "react";
+import { Link as RouterLink } from "react-router-dom";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import Divider from "@mui/material/Divider";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Alert from "@mui/material/Alert";
+import LinearProgress from "@mui/material/LinearProgress";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import GoogleIcon from "@mui/icons-material/Google";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import authWeddingImg from "../assets/auth-wedding.jpg";
+
+function getPasswordStrength(password: string) {
+  let score = 0;
+  if (password.length >= 8) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[a-z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+  return score;
+}
+
+function strengthLabel(score: number) {
+  if (score <= 1) return { label: "Weak", color: "#d32f2f" };
+  if (score <= 2) return { label: "Fair", color: "#ed6c02" };
+  if (score <= 3) return { label: "Good", color: "#c4724e" };
+  return { label: "Strong", color: "#2e7d32" };
+}
+
+export default function SignUpPage() {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const strength = getPasswordStrength(password);
+  const { label: strengthText, color: strengthColor } = strengthLabel(strength);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (!firstName || !lastName || !email || !password) {
+      setError("Please fill in all fields.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (!agreeTerms) {
+      setError("Please agree to the terms and conditions.");
+      return;
+    }
+    setLoading(true);
+    setTimeout(() => setLoading(false), 1500);
+  };
+
+  const handleGoogleSignUp = () => {
+    // Google OAuth integration placeholder
+  };
+
+  const fieldSx = {
+    "& .MuiOutlinedInput-root": {
+      borderRadius: 2,
+      bgcolor: "background.default",
+      "& fieldset": {
+        borderColor: "rgba(61, 47, 37, 0.15)",
+      },
+      "&:hover fieldset": {
+        borderColor: "rgba(196, 114, 78, 0.4)",
+      },
+      "&.Mui-focused fieldset": {
+        borderColor: "secondary.main",
+        borderWidth: 1.5,
+      },
+    },
+    "& .MuiInputBase-input": {
+      py: 1.3,
+      fontSize: "0.95rem",
+    },
+  };
+
+  return (
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: { xs: "column", md: "row" },
+      }}
+    >
+      {/* Left side - Image panel */}
+      <Box
+        sx={{
+          display: { xs: "none", md: "flex" },
+          width: "45%",
+          position: "relative",
+          overflow: "hidden",
+          backgroundImage: `url(${authWeddingImg})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(to top, rgba(42, 31, 24, 0.7) 0%, rgba(42, 31, 24, 0.2) 50%, transparent 100%)",
+          }}
+        />
+        <Box
+          sx={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            p: { md: 5, lg: 6 },
+          }}
+        >
+          <Typography
+            variant="h4"
+            sx={{
+              fontFamily: "'Playfair Display', serif",
+              color: "#fff",
+              fontWeight: 700,
+              mb: 1.5,
+              lineHeight: 1.2,
+            }}
+          >
+            Begin your forever
+          </Typography>
+          <Typography
+            sx={{
+              color: "rgba(255,255,255,0.85)",
+              fontSize: "1.05rem",
+              lineHeight: 1.6,
+              maxWidth: 380,
+            }}
+          >
+            Join thousands of couples who found their perfect venue and catering
+            through TooInfinity.
+          </Typography>
+
+          {/* Social proof */}
+          <Box sx={{ mt: 3, display: "flex", gap: 4 }}>
+            {[
+              { num: "2,500+", text: "Venues" },
+              { num: "1,200+", text: "Caterers" },
+              { num: "10k+", text: "Happy Couples" },
+            ].map((stat) => (
+              <Box key={stat.text}>
+                <Typography
+                  sx={{
+                    color: "#fff",
+                    fontWeight: 700,
+                    fontSize: "1.2rem",
+                    fontFamily: "'Playfair Display', serif",
+                  }}
+                >
+                  {stat.num}
+                </Typography>
+                <Typography
+                  sx={{
+                    color: "rgba(255,255,255,0.7)",
+                    fontSize: "0.8rem",
+                  }}
+                >
+                  {stat.text}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Right side - Form */}
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          px: { xs: 3, sm: 6, md: 8 },
+          py: { xs: 5, md: 5 },
+          bgcolor: "background.paper",
+          overflowY: "auto",
+        }}
+      >
+        <Box sx={{ width: "100%", maxWidth: 440 }}>
+          {/* Logo */}
+          <Box
+            component={RouterLink}
+            to="/"
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              textDecoration: "none",
+              mb: 4,
+            }}
+          >
+            <FavoriteIcon sx={{ color: "secondary.main", fontSize: 26 }} />
+            <Typography
+              variant="h6"
+              sx={{
+                fontFamily: "'Playfair Display', serif",
+                fontWeight: 700,
+                color: "primary.main",
+                fontSize: "1.3rem",
+              }}
+            >
+              TooInfinity
+            </Typography>
+          </Box>
+
+          {/* Heading */}
+          <Typography
+            variant="h4"
+            sx={{
+              fontFamily: "'Playfair Display', serif",
+              fontWeight: 700,
+              color: "text.primary",
+              mb: 0.5,
+              fontSize: { xs: "1.6rem", md: "1.85rem" },
+            }}
+          >
+            Create your account
+          </Typography>
+          <Typography
+            sx={{
+              color: "text.secondary",
+              mb: 3.5,
+              fontSize: "0.95rem",
+              lineHeight: 1.5,
+            }}
+          >
+            Start planning the wedding of your dreams today.
+          </Typography>
+
+          {/* Google Sign Up */}
+          <Button
+            fullWidth
+            variant="outlined"
+            startIcon={<GoogleIcon />}
+            onClick={handleGoogleSignUp}
+            sx={{
+              py: 1.4,
+              mb: 3,
+              borderColor: "rgba(61, 47, 37, 0.2)",
+              color: "text.primary",
+              fontWeight: 500,
+              fontSize: "0.95rem",
+              textTransform: "none",
+              borderRadius: 2,
+              "&:hover": {
+                borderColor: "secondary.main",
+                bgcolor: "rgba(196, 114, 78, 0.04)",
+              },
+            }}
+          >
+            Continue with Google
+          </Button>
+
+          {/* Divider */}
+          <Divider
+            sx={{
+              mb: 3,
+              "&::before, &::after": {
+                borderColor: "rgba(61, 47, 37, 0.12)",
+              },
+            }}
+          >
+            <Typography
+              sx={{
+                color: "text.secondary",
+                fontSize: "0.82rem",
+                px: 2,
+              }}
+            >
+              or sign up with email
+            </Typography>
+          </Divider>
+
+          {/* Error */}
+          {error && (
+            <Alert
+              severity="error"
+              onClose={() => setError("")}
+              sx={{ mb: 2.5, borderRadius: 2 }}
+            >
+              {error}
+            </Alert>
+          )}
+
+          {/* Form */}
+          <Box component="form" onSubmit={handleSubmit} noValidate>
+            {/* Name row */}
+            <Box sx={{ display: "flex", gap: 2, mb: 2.5 }}>
+              <Box sx={{ flex: 1 }}>
+                <Typography
+                  component="label"
+                  htmlFor="firstName"
+                  sx={{
+                    display: "block",
+                    fontSize: "0.85rem",
+                    fontWeight: 600,
+                    color: "text.primary",
+                    mb: 0.5,
+                  }}
+                >
+                  First name
+                </Typography>
+                <TextField
+                  id="firstName"
+                  placeholder="Jane"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  fullWidth
+                  size="small"
+                  sx={fieldSx}
+                />
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography
+                  component="label"
+                  htmlFor="lastName"
+                  sx={{
+                    display: "block",
+                    fontSize: "0.85rem",
+                    fontWeight: 600,
+                    color: "text.primary",
+                    mb: 0.5,
+                  }}
+                >
+                  Last name
+                </Typography>
+                <TextField
+                  id="lastName"
+                  placeholder="Doe"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  fullWidth
+                  size="small"
+                  sx={fieldSx}
+                />
+              </Box>
+            </Box>
+
+            {/* Email */}
+            <Typography
+              component="label"
+              htmlFor="signupEmail"
+              sx={{
+                display: "block",
+                fontSize: "0.85rem",
+                fontWeight: 600,
+                color: "text.primary",
+                mb: 0.5,
+              }}
+            >
+              Email address
+            </Typography>
+            <TextField
+              id="signupEmail"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              fullWidth
+              size="small"
+              sx={{ ...fieldSx, mb: 2.5 }}
+            />
+
+            {/* Password */}
+            <Typography
+              component="label"
+              htmlFor="signupPassword"
+              sx={{
+                display: "block",
+                fontSize: "0.85rem",
+                fontWeight: 600,
+                color: "text.primary",
+                mb: 0.5,
+              }}
+            >
+              Password
+            </Typography>
+            <TextField
+              id="signupPassword"
+              type={showPassword ? "text" : "password"}
+              placeholder="Min. 8 characters"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              fullWidth
+              size="small"
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                      size="small"
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
+                    >
+                      {showPassword ? (
+                        <VisibilityOffIcon
+                          sx={{ fontSize: 20, color: "text.secondary" }}
+                        />
+                      ) : (
+                        <VisibilityIcon
+                          sx={{ fontSize: 20, color: "text.secondary" }}
+                        />
+                      )}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ ...fieldSx, mb: 1 }}
+            />
+
+            {/* Password strength meter */}
+            {password.length > 0 && (
+              <Box sx={{ mb: 2.5 }}>
+                <LinearProgress
+                  variant="determinate"
+                  value={(strength / 5) * 100}
+                  sx={{
+                    height: 4,
+                    borderRadius: 2,
+                    bgcolor: "rgba(61, 47, 37, 0.08)",
+                    mb: 0.8,
+                    "& .MuiLinearProgress-bar": {
+                      bgcolor: strengthColor,
+                      borderRadius: 2,
+                    },
+                  }}
+                />
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: "0.78rem",
+                      color: strengthColor,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {strengthText}
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 1.5 }}>
+                    {[
+                      { met: password.length >= 8, label: "8+ chars" },
+                      { met: /[A-Z]/.test(password), label: "Uppercase" },
+                      { met: /[0-9]/.test(password), label: "Number" },
+                    ].map((rule) => (
+                      <Box
+                        key={rule.label}
+                        sx={{ display: "flex", alignItems: "center", gap: 0.3 }}
+                      >
+                        <CheckCircleOutlineIcon
+                          sx={{
+                            fontSize: 13,
+                            color: rule.met ? "#2e7d32" : "rgba(61,47,37,0.2)",
+                          }}
+                        />
+                        <Typography
+                          sx={{
+                            fontSize: "0.72rem",
+                            color: rule.met ? "text.primary" : "text.secondary",
+                          }}
+                        >
+                          {rule.label}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              </Box>
+            )}
+
+            {/* Terms */}
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={agreeTerms}
+                  onChange={(e) => setAgreeTerms(e.target.checked)}
+                  size="small"
+                  sx={{
+                    color: "rgba(61, 47, 37, 0.3)",
+                    "&.Mui-checked": { color: "secondary.main" },
+                  }}
+                />
+              }
+              label={
+                <Typography
+                  sx={{ fontSize: "0.83rem", color: "text.secondary" }}
+                >
+                  {"I agree to the "}
+                  <RouterLink
+                    to="/terms"
+                    style={{
+                      color: "#c4724e",
+                      textDecoration: "none",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Terms of Service
+                  </RouterLink>
+                  {" and "}
+                  <RouterLink
+                    to="/privacy"
+                    style={{
+                      color: "#c4724e",
+                      textDecoration: "none",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Privacy Policy
+                  </RouterLink>
+                </Typography>
+              }
+              sx={{ mb: 3, alignItems: "flex-start", mt: -0.5 }}
+            />
+
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              disabled={loading}
+              sx={{
+                py: 1.4,
+                bgcolor: "secondary.main",
+                color: "#fff",
+                fontWeight: 600,
+                fontSize: "1rem",
+                textTransform: "none",
+                borderRadius: 2,
+                boxShadow: "0 2px 8px rgba(196, 114, 78, 0.3)",
+                "&:hover": {
+                  bgcolor: "secondary.dark",
+                  boxShadow: "0 4px 12px rgba(196, 114, 78, 0.4)",
+                },
+                "&:disabled": {
+                  bgcolor: "rgba(196, 114, 78, 0.5)",
+                  color: "#fff",
+                },
+              }}
+            >
+              {loading ? "Creating account..." : "Create Account"}
+            </Button>
+          </Box>
+
+          {/* Footer */}
+          <Typography
+            sx={{
+              mt: 4,
+              textAlign: "center",
+              fontSize: "0.9rem",
+              color: "text.secondary",
+            }}
+          >
+            Already have an account?{" "}
+            <RouterLink
+              to="/signin"
+              style={{
+                color: "#c4724e",
+                fontWeight: 600,
+                textDecoration: "none",
+              }}
+            >
+              Sign in
+            </RouterLink>
+          </Typography>
+        </Box>
+      </Box>
+    </Box>
+  );
+}

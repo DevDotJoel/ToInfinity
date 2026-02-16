@@ -469,7 +469,7 @@ export default function VenuesPage() {
                   fontSize: "0.9rem",
                 }}
               >
-                From {venue.price.toLocaleString("de-DE")}€
+                €{Math.round(venue.price / venue.capacity)} / person
               </Typography>
             </Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
@@ -653,7 +653,7 @@ export default function VenuesPage() {
               fontSize: "0.88rem",
             }}
           >
-            From {venue.price.toLocaleString("de-DE")}€
+            €{Math.round(venue.price / venue.capacity)} / person
           </Typography>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.3 }}>
             <PeopleIcon sx={{ color: "text.secondary", fontSize: 15 }} />

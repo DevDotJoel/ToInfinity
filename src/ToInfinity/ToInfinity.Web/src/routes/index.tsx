@@ -2,6 +2,8 @@ import { createBrowserRouter } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import HomePage from "../pages/home-page";
 import VenuesPage from "../pages/venues-page";
+import SignInPage from "../pages/sign-in-page";
+import SignUpPage from "../pages/sign-up-page";
 import NotFoundPage from "../pages/not-found-page.tsx";
 
 export const router = createBrowserRouter([
@@ -31,23 +33,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/signin",
-    element: <Layout />,
-    children: [
-      {
-        index: true,
-        element: <div>Sign In Page - Coming Soon</div>,
-      },
-    ],
+    element: <SignInPage />,
   },
   {
     path: "/signup",
-    element: <Layout />,
-    children: [
-      {
-        index: true,
-        element: <div>Sign Up Page - Coming Soon</div>,
-      },
-    ],
+    element: <SignUpPage />,
   },
   {
     path: "*",

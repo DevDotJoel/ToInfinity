@@ -195,7 +195,7 @@ const FeaturedVenues = () => {
                       variant="subtitle1"
                       sx={{ fontWeight: 700, color: "secondary.main" }}
                     >
-                      ${venue.price.toLocaleString()}
+                      €{Math.round(venue.price / venue.capacity)} / person
                     </Typography>
                   </Box>
                 </CardContent>
