@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stripe;
 using Stripe.Checkout;
-using ToInfinity.Api.Services;
 using ToInfinity.Application.Common.Services;
 using ToInfinity.Application.Subscriptions.Models;
 using ToInfinity.Contracts.Subscriptions;

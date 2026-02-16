@@ -94,7 +94,7 @@ ToInfinity/
    Copy the template and update with your settings:
 
    ```bash
-   cd src/ToInfinity/ToInfinity.Api
+   cd src/ToInfinity.Api
    # Edit appsettings.Development.json with your configuration
    ```
 
@@ -114,7 +114,7 @@ ToInfinity/
 4. **Apply Database Migrations**
 
    ```bash
-   cd src/ToInfinity/ToInfinity.Infrastructure
+   cd src/ToInfinity.Infrastructure
    dotnet ef database update --project ../ToInfinity.Api
    ```
 
