@@ -25,6 +25,7 @@ public class AuthController : ApiController
         var registerModel = new Application.Auth.Models.RegisterModel(
             request.Email,
             request.Password,
+            request.ConfirmPassword,
             request.FirstName,
             request.LastName);
 
@@ -110,6 +111,28 @@ public class AuthController : ApiController
             errors => Problem(errors));
     }
 
+    [Authorize]
+    [HttpGet("me")]
+    public async Task<IActionResult> GetCurrentUser(
+        [FromServices] IUserContext userContext,
+        CancellationToken cancellationToken)
+    {
+        var userId = userContext.GetCurrentUserId();
+        var result = await _identityService.GetUserInfoAsync(userId, cancellationToken);
+
+        return result.Match(
+            userInfo => Ok(new UserInfoResponse(
+                userInfo.UserId,
+                userInfo.Email,
+                userInfo.FirstName,
+                userInfo.LastName,
+                userInfo.CurrentPlan,
+                userInfo.SubscriptionStatus,
+                userInfo.SubscriptionExpiresAt
+            )),
+            errors => Problem(errors));
+    }
+
     [AllowAnonymous]
     [HttpGet("external-login")]
     public IActionResult ExternalLogin([FromQuery] string provider, [FromQuery] string returnUrl = "/")
@@ -145,7 +168,7 @@ public class AuthController : ApiController
         {
             HttpOnly = true,
             Secure = true,
-            SameSite = SameSiteMode.Lax, // Same domain setup
+            SameSite = SameSiteMode.None, // Required for cross-origin requests
             Expires = DateTimeOffset.UtcNow.AddDays(7)
         };
 

@@ -2,6 +2,7 @@ using System.Reflection;
 using AspNetCoreRateLimit;
 using Mapster;
 using MapsterMapper;
+using Microsoft.OpenApi.Models;
 using ToInfinity.Api.Services;
 using ToInfinity.Application;
 using ToInfinity.Application.Common.Services;
@@ -11,8 +12,57 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+
+// Configure Swagger/OpenAPI
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Version = "v1",
+        Title = "ToInfinity API",
+        Description = "API for ToInfinity wedding venue management system",
+        Contact = new OpenApiContact
+        {
+            Name = "ToInfinity",
+            Email = "support@toinfinity.com"
+        }
+    });
+
+    // Configure JWT Bearer authentication for Swagger
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer",
+        BearerFormat = "JWT"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+
+    // Include XML comments if available
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        options.IncludeXmlComments(xmlPath);
+    }
+});
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserContext, UserContext>();
@@ -24,15 +74,12 @@ builder.Services.Configure<IpRateLimitPolicies>(builder.Configuration.GetSection
 builder.Services.AddInMemoryRateLimiting();
 builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
 
-// Configure CORS for same-domain (subdomain)
+// Configure CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("SameDomain", policy =>
+    options.AddPolicy("frontend", policy =>
     {
-        var frontendUrl = builder.Configuration["WebApp:FrontendPublicUrl"]
-            ?? "https://toinfinity.com";
-
-        policy.WithOrigins(frontendUrl)
+        policy.SetIsOriginAllowed(host => true) // Allow any origin in development
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials(); // Required for cookies
@@ -53,14 +100,20 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "ToInfinity API v1");
+        options.RoutePrefix = "swagger";
+        options.DocumentTitle = "ToInfinity API Documentation";
+    });
 }
 
 app.UseHttpsRedirection();
 
 app.UseIpRateLimiting();
 
-app.UseCors("SameDomain");
+app.UseCors("frontend");
 
 app.UseAuthentication();
 app.UseAuthorization();

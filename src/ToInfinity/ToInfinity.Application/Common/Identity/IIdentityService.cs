@@ -15,6 +15,7 @@ public interface IIdentityService
     Task<ErrorOr<AuthResultModel>> RefreshTokenAsync(RefreshTokenModel request, CancellationToken cancellationToken = default);
     Task<ErrorOr<Success>> LogoutAsync(UserId userId, CancellationToken cancellationToken = default);
     Task<ErrorOr<AuthResultModel>> ExternalLoginAsync(CancellationToken cancellationToken = default);
+    Task<ErrorOr<UserInfoModel>> GetUserInfoAsync(UserId userId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Initiates external authentication flow by configuring authentication properties

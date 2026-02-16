@@ -34,6 +34,14 @@ public class IdentityService : IIdentityService
         RegisterModel request,
         CancellationToken cancellationToken = default)
     {
+        // Validate password confirmation
+        if (request.Password != request.ConfirmPassword)
+        {
+            return Error.Validation(
+                code: "User.PasswordMismatch",
+                description: "Password and confirmation password do not match.");
+        }
+
         var existingUser = await _userManager.FindByEmailAsync(request.Email);
         if (existingUser is not null)
         {
@@ -44,9 +52,11 @@ public class IdentityService : IIdentityService
 
         var user = new ApplicationUser
         {
-            Id = Guid.NewGuid(),
+            FirstName = request.FirstName,
+            LastName = request.LastName,
             Email = request.Email,
             UserName = request.Email
+
         };
 
         var result = await _userManager.CreateAsync(user, request.Password);
@@ -55,6 +65,15 @@ public class IdentityService : IIdentityService
             return Error.Validation(
                 code: "User.RegistrationFailed",
                 description: string.Join(", ", result.Errors.Select(e => e.Description)));
+        }
+
+        // Assign default User role
+        var roleResult = await _userManager.AddToRoleAsync(user, "User");
+        if (!roleResult.Succeeded)
+        {
+            return Error.Validation(
+                code: "User.RoleAssignmentFailed",
+                description: string.Join(", ", roleResult.Errors.Select(e => e.Description)));
         }
 
         var roles = new List<string> { "User" };
@@ -324,6 +343,29 @@ public class IdentityService : IIdentityService
         var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
 
         return new ExternalLoginInitiation(provider, properties);
+    }
+
+    public async Task<ErrorOr<UserInfoModel>> GetUserInfoAsync(
+        UserId userId,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId.Value.ToString());
+        if (user is null)
+        {
+            return Error.NotFound(
+                code: "User.NotFound",
+                description: "User not found.");
+        }
+
+        return new UserInfoModel(
+            UserId: user.Id,
+            Email: user.Email ?? string.Empty,
+            FirstName: user.FirstName ?? string.Empty,
+            LastName: user.LastName ?? string.Empty,
+            CurrentPlan: user.CurrentPlan.ToString(),
+            SubscriptionStatus: user.SubscriptionStatus.ToString(),
+            SubscriptionExpiresAt: user.SubscriptionExpiresAt
+        );
     }
 
     public string GetFrontendUrl()
