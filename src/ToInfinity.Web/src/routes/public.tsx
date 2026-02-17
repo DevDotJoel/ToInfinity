@@ -17,6 +17,11 @@ const { AboutRoutes } = lazyImport(
   "AboutRoutes",
 );
 
+const { LegalRoutes } = lazyImport(
+  () => import("../features/legal"),
+  "LegalRoutes",
+);
+
 const { VenuesRoutes } = lazyImport(
   () => import("../features/venues"),
   "VenuesRoutes",
@@ -34,6 +39,10 @@ export const publicRoutes = [
       {
         path: "about",
         element: <AboutRoutes />,
+      },
+      {
+        path: "legal/*",
+        element: <LegalRoutes />,
       },
       {
         path: "venues",

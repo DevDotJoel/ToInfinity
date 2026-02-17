@@ -12,7 +12,6 @@ import XIcon from "@mui/icons-material/X";
 const footerLinks = {
   Explore: [
     { label: "Venues", href: "/venues" },
-    { label: "Catering", href: "/catering" },
   ],
   Company: [
     { label: "About Us", href: "/about" },
@@ -21,8 +20,8 @@ const footerLinks = {
   ],
   Support: [
     { label: "Help Center", href: "/" },
-    { label: "Terms of Service", href: "/" },
-    { label: "Privacy Policy", href: "/" },
+    { label: "Terms of Service", href: "/legal/terms" },
+    { label: "Privacy Policy", href: "/legal/privacy" },
   ],
 };
 
