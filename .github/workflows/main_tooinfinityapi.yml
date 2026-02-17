@@ -32,6 +32,7 @@ jobs:
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
+          app_location: "./src/ToInfinity.Api/"
           name: .net-app
           path: ${{env.DOTNET_ROOT}}/myapp
 
@@ -52,4 +53,5 @@ jobs:
           app-name: 'TooInfinityAPI'
           slot-name: 'Production'
           package: .
+
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_5683B306EBDC4E37BE8251506A1FED6A }}
