@@ -10,9 +10,7 @@ import FacebookIcon from "@mui/icons-material/Facebook";
 import XIcon from "@mui/icons-material/X";
 
 const footerLinks = {
-  Explore: [
-    { label: "Venues", href: "/venues" },
-  ],
+  Explore: [{ label: "Venues", href: "/venues" }],
   Company: [
     { label: "About Us", href: "/about" },
     { label: "Contact", href: "/" },
