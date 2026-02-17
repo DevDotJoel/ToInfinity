@@ -59,7 +59,7 @@ export default function SignUpPage() {
         });
         // Navigate after a short delay to show success animation
         setTimeout(() => {
-          navigate("/dashboard");
+          navigate("/app/dashboard");
         }, 1500);
       },
     },

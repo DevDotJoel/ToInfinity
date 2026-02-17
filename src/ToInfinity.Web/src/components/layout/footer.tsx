@@ -15,7 +15,7 @@ const footerLinks = {
     { label: "Catering", href: "/catering" },
   ],
   Company: [
-    { label: "About Us", href: "/" },
+    { label: "About Us", href: "/about" },
     { label: "Contact", href: "/" },
     { label: "Careers", href: "/" },
   ],

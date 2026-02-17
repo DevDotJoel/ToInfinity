@@ -11,7 +11,8 @@ export { useLogout } from "./hooks/use-logout";
 export { useUser } from "./hooks/use-user";
 
 // Export context
-export { AuthProvider, useAuth } from "./context/auth-provider";
+export { AuthProvider } from "./context/auth-provider";
+export { useAuth } from "./context/use-auth";
 
 // Export types
 export type { User, LoginRequest, RegisterRequest, AuthResult } from "./types";

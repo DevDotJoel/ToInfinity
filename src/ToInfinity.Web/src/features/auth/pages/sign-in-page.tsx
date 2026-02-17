@@ -38,7 +38,7 @@ export default function SignInPage() {
           refetchType: "active", // Wait for active query to refetch
         });
         setTimeout(() => {
-          navigate("/dashboard");
+          navigate("/app/dashboard");
         }, 1500);
       },
     },

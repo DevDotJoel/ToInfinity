@@ -33,6 +33,7 @@ const navLinks = [
   { label: "Home", href: "/home" },
   { label: "Venues", href: "/venues" },
   { label: "Catering", href: "/catering" },
+  { label: "About", href: "/about" },
 ];
 
 interface NavbarProps {
@@ -57,18 +58,18 @@ const Navbar = ({ isLoggedIn = false }: NavbarProps) => {
     {
       label: "Dashboard",
       icon: <DashboardIcon sx={{ fontSize: 20 }} />,
-      href: "/dashboard",
+      href: "/app/dashboard",
     },
     {
       label: "My Quotes",
       icon: <ReceiptLongIcon sx={{ fontSize: 20 }} />,
-      href: "/dashboard",
+      href: "/app/dashboard",
       badge: pendingCount,
     },
     {
       label: "Account Settings",
       icon: <SettingsIcon sx={{ fontSize: 20 }} />,
-      href: "/dashboard",
+      href: "/app/dashboard",
     },
   ];
 
@@ -349,7 +350,7 @@ const Navbar = ({ isLoggedIn = false }: NavbarProps) => {
                 {isLoggedIn && (
                   <IconButton
                     component={RouterLink}
-                    to="/dashboard"
+                    to="/app/dashboard"
                     sx={{ color: "primary.main" }}
                     aria-label="Go to dashboard"
                   >

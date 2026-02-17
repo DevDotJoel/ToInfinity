@@ -11,7 +11,7 @@ export function Landing() {
 
   // If user is authenticated, redirect to dashboard
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/app/dashboard" replace />;
   }
 
   // If not authenticated, redirect to home

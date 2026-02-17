@@ -41,7 +41,7 @@ const AuthenticatedNavbar = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
-  const { mutate: logout } = useLogout({
+  const { mutateAsync: logout } = useLogout({
     config: {
       onSuccess: () => {
         navigate("/home", { replace: true }); // Replace history so back button doesn't return here
@@ -49,10 +49,10 @@ const AuthenticatedNavbar = () => {
     },
   });
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setAnchorEl(null);
     setDrawerOpen(false);
-    logout();
+    await logout();
   };
 
   const pendingCount = mockQuoteRequests.filter(
@@ -65,18 +65,18 @@ const AuthenticatedNavbar = () => {
     {
       label: "Dashboard",
       icon: <DashboardIcon sx={{ fontSize: 20 }} />,
-      href: "/dashboard",
+      href: "/app/dashboard",
     },
     {
       label: "My Quotes",
       icon: <ReceiptLongIcon sx={{ fontSize: 20 }} />,
-      href: "/dashboard",
+      href: "/app/dashboard",
       badge: pendingCount,
     },
     {
       label: "Account Settings",
       icon: <SettingsIcon sx={{ fontSize: 20 }} />,
-      href: "/dashboard",
+      href: "/app/dashboard",
     },
   ];
 
@@ -97,7 +97,7 @@ const AuthenticatedNavbar = () => {
         <Container maxWidth="lg">
           <Toolbar disableGutters sx={{ minHeight: { xs: 64, md: 72 } }}>
             <RouterLink
-              to="/dashboard"
+              to="/app/dashboard"
               style={{
                 textDecoration: "none",
                 display: "flex",
@@ -309,7 +309,7 @@ const AuthenticatedNavbar = () => {
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                 <IconButton
                   component={RouterLink}
-                  to="/dashboard"
+                  to="/app/dashboard"
                   sx={{ color: "primary.main" }}
                   aria-label="Go to dashboard"
                 >

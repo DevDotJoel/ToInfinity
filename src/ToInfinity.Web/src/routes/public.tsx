@@ -12,6 +12,11 @@ const { HomeRoutes } = lazyImport(
   "HomeRoutes",
 );
 
+const { AboutRoutes } = lazyImport(
+  () => import("../features/about"),
+  "AboutRoutes",
+);
+
 const { VenuesRoutes } = lazyImport(
   () => import("../features/venues"),
   "VenuesRoutes",
@@ -25,6 +30,10 @@ export const publicRoutes = [
       {
         path: "home",
         element: <HomeRoutes />,
+      },
+      {
+        path: "about",
+        element: <AboutRoutes />,
       },
       {
         path: "venues",

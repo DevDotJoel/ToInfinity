@@ -3,11 +3,11 @@ import { ProtectedApp } from "./components/protected-app";
 
 export const protectedRoutes = [
   {
-    path: "/dashboard",
+    path: "/app",
     element: <ProtectedApp />,
     children: [
       {
-        index: true,
+        path: "dashboard",
         element: (
           <Box sx={{ p: 4 }}>
             <h1>Dashboard</h1>
