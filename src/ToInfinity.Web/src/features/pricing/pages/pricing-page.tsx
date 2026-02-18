@@ -51,10 +51,10 @@ const PricingPage = () => {
             </>
           }
         />
-
-        {/* Trust section */}
-        <TrustSection title="Why choose TooInfinity?" items={TRUST_ITEMS} />
       </Container>
+
+      {/* Trust section - Full width */}
+      <TrustSection title="Why choose TooInfinity?" items={TRUST_ITEMS} />
     </Box>
   );
 };

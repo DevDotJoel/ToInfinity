@@ -72,7 +72,7 @@ const AuthenticatedNavbar = () => {
     {
       label: "My Quotes",
       icon: <ReceiptLongIcon sx={{ fontSize: 20 }} />,
-      href: "/app/dashboard",
+      href: "/app/quotes",
       badge: pendingCount,
     },
     {

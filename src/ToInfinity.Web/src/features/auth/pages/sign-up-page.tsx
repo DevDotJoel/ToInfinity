@@ -98,7 +98,7 @@ export default function SignUpPage() {
   const handleGoogleSignUp = async () => {
     setGoogleLoading(true);
     try {
-      await handleGoogleLogin("/");
+      await handleGoogleLogin("/app/dashboard");
     } finally {
       setGoogleLoading(false);
     }
