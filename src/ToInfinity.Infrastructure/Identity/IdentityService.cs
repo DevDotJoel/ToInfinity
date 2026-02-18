@@ -278,14 +278,14 @@ public class IdentityService : IIdentityService
             if (existingUser is null)
             {
                 // Create new user
-                var firstName = info.Principal.FindFirstValue(ClaimTypes.GivenName) 
-                    ?? info.Principal.FindFirstValue("given_name") 
+                var firstName = info.Principal.FindFirstValue(ClaimTypes.GivenName)
+                    ?? info.Principal.FindFirstValue("given_name")
                     ?? string.Empty;
-                    
-                var lastName = info.Principal.FindFirstValue(ClaimTypes.Surname) 
-                    ?? info.Principal.FindFirstValue("family_name") 
+
+                var lastName = info.Principal.FindFirstValue(ClaimTypes.Surname)
+                    ?? info.Principal.FindFirstValue("family_name")
                     ?? string.Empty;
-                
+
                 user = new ApplicationUser
                 {
                     Id = Guid.NewGuid(),
@@ -321,8 +321,7 @@ public class IdentityService : IIdentityService
                     description: string.Join(", ", addLoginResult.Errors.Select(e => e.Description)));
             }
 
-            // Sign in the user after creating/linking account
-            await _signInManager.SignInAsync(user, isPersistent: true);
+            // Don't use SignInManager here - we're using JWT tokens, not Identity cookies
         }
 
         // Generate tokens for cookies

@@ -208,10 +208,10 @@ public class AuthController : ApiController
     {
         var backendHost = _configuration["WebApp:BackendHost"];
 
-        // In development (localhost), don't set a domain
+        // In development (localhost), set domain to "localhost" to share cookies across ports
         if (backendHost?.Contains("localhost") == true)
         {
-            return null;
+            return "localhost";
         }
 
         // In production, extract the root domain and prefix with .
