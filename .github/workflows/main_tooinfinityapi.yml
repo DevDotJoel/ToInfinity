@@ -7,6 +7,12 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'src/ToInfinity.Api/**'
+      - 'src/ToInfinity.Application/**'
+      - 'src/ToInfinity.Domain/**'
+      - 'src/ToInfinity.Infrastructure/**'
+      - 'src/ToInfinity.Contracts/**'
   workflow_dispatch:
 
 jobs:
