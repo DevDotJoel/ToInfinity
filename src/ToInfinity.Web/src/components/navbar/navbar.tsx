@@ -27,7 +27,8 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/Logout";
-import { mockUser, mockQuoteRequests } from "../../lib/data";
+import { mockQuoteRequests } from "../../lib/data";
+import { useAuth } from "../../features/auth";
 
 const navLinks = [
   { label: "Home", href: "/home" },
@@ -46,12 +47,14 @@ const Navbar = ({ isLoggedIn = false }: NavbarProps) => {
   const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const { user } = useAuth();
 
   const pendingCount = mockQuoteRequests.filter(
     (q) => q.status === "replied",
   ).length;
 
-  const initials = mockUser.firstName.charAt(0) + mockUser.lastName.charAt(0);
+  const initials =
+    (user?.firstName?.charAt(0) || "?") + (user?.lastName?.charAt(0) || "?");
 
   const userMenuItems = [
     {
@@ -68,7 +71,7 @@ const Navbar = ({ isLoggedIn = false }: NavbarProps) => {
     {
       label: "Account Settings",
       icon: <SettingsIcon sx={{ fontSize: 20 }} />,
-      href: "/app/dashboard",
+      href: "/app/settings",
     },
   ];
 
@@ -223,13 +226,13 @@ const Navbar = ({ isLoggedIn = false }: NavbarProps) => {
                             fontSize: "0.95rem",
                           }}
                         >
-                          {mockUser.firstName} {mockUser.lastName}
+                          {user?.firstName} {user?.lastName}
                         </Typography>
                         <Typography
                           variant="body2"
                           sx={{ color: "text.secondary", fontSize: "0.82rem" }}
                         >
-                          {mockUser.email}
+                          {user?.email}
                         </Typography>
                       </Box>
 
@@ -401,6 +404,8 @@ const Navbar = ({ isLoggedIn = false }: NavbarProps) => {
             width: 300,
             bgcolor: "background.paper",
             pt: 2,
+            display: "flex",
+            flexDirection: "column",
           },
         }}
       >
@@ -446,13 +451,13 @@ const Navbar = ({ isLoggedIn = false }: NavbarProps) => {
                   lineHeight: 1.2,
                 }}
               >
-                {mockUser.firstName} {mockUser.lastName}
+                {user?.firstName} {user?.lastName}
               </Typography>
               <Typography
                 variant="body2"
                 sx={{ color: "text.secondary", fontSize: "0.78rem" }}
               >
-                {mockUser.email}
+                {user?.email}
               </Typography>
             </Box>
           </Box>
@@ -532,13 +537,15 @@ const Navbar = ({ isLoggedIn = false }: NavbarProps) => {
           )}
         </List>
 
+        <Box sx={{ flexGrow: 1 }} />
+
         <Box
           sx={{
             px: 3,
-            mt: 2,
-            display: "flex",
-            flexDirection: "column",
-            gap: 1.5,
+            pb: 3,
+            pt: 2,
+            borderTop: "1px solid",
+            borderColor: "rgba(61,47,37,0.06)",
           }}
         >
           {isLoggedIn ? (
@@ -547,17 +554,15 @@ const Navbar = ({ isLoggedIn = false }: NavbarProps) => {
               component={RouterLink}
               to="/"
               onClick={() => setDrawerOpen(false)}
-              startIcon={<LogoutIcon />}
+              startIcon={<LogoutIcon sx={{ fontSize: 18 }} />}
               sx={{
                 color: "text.secondary",
                 fontWeight: 500,
                 textTransform: "none",
-                py: 1.2,
+                py: 1,
                 borderRadius: 2,
-                border: "1px solid",
-                borderColor: "rgba(61, 47, 37, 0.15)",
+                fontSize: "0.88rem",
                 "&:hover": {
-                  borderColor: "secondary.main",
                   color: "secondary.main",
                   backgroundColor: "rgba(196, 114, 78, 0.04)",
                 },
@@ -566,36 +571,19 @@ const Navbar = ({ isLoggedIn = false }: NavbarProps) => {
               Sign Out
             </Button>
           ) : (
-            <>
+            <Box sx={{ display: "flex", gap: 1.5 }}>
               <Button
-                variant="contained"
-                fullWidth
-                component={RouterLink}
-                to="/auth/signup"
-                onClick={() => setDrawerOpen(false)}
-                sx={{
-                  bgcolor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: 600,
-                  textTransform: "none",
-                  py: 1.2,
-                  borderRadius: 2,
-                  "&:hover": { bgcolor: "secondary.dark" },
-                }}
-              >
-                Sign Up
-              </Button>
-              <Button
-                fullWidth
                 component={RouterLink}
                 to="/auth/signin"
                 onClick={() => setDrawerOpen(false)}
                 sx={{
+                  flex: 1,
                   color: "text.primary",
                   fontWeight: 500,
                   textTransform: "none",
-                  py: 1.2,
+                  py: 0.9,
                   borderRadius: 2,
+                  fontSize: "0.88rem",
                   border: "1px solid",
                   borderColor: "rgba(61, 47, 37, 0.15)",
                   "&:hover": {
@@ -607,7 +595,26 @@ const Navbar = ({ isLoggedIn = false }: NavbarProps) => {
               >
                 Sign In
               </Button>
-            </>
+              <Button
+                variant="contained"
+                component={RouterLink}
+                to="/auth/signup"
+                onClick={() => setDrawerOpen(false)}
+                sx={{
+                  flex: 1,
+                  bgcolor: "secondary.main",
+                  color: "#fff",
+                  fontWeight: 600,
+                  textTransform: "none",
+                  py: 0.9,
+                  borderRadius: 2,
+                  fontSize: "0.88rem",
+                  "&:hover": { bgcolor: "secondary.dark" },
+                }}
+              >
+                Sign Up
+              </Button>
+            </Box>
           )}
         </Box>
       </Drawer>

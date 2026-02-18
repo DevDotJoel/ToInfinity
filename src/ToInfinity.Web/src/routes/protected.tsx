@@ -1,5 +1,16 @@
 import Box from "@mui/material/Box";
 import { ProtectedApp } from "./components/protected-app";
+import { lazyImport } from "../utils/lazyImport";
+
+const { PricingRoutes } = lazyImport(
+  () => import("../features/pricing"),
+  "PricingRoutes",
+);
+
+const { AccountSettingsRoutes } = lazyImport(
+  () => import("../features/account-settings"),
+  "AccountSettingsRoutes",
+);
 
 export const protectedRoutes = [
   {
@@ -14,6 +25,14 @@ export const protectedRoutes = [
             <p>Welcome to your dashboard!</p>
           </Box>
         ),
+      },
+      {
+        path: "pricing/*",
+        element: <PricingRoutes />,
+      },
+      {
+        path: "settings/*",
+        element: <AccountSettingsRoutes />,
       },
     ],
   },

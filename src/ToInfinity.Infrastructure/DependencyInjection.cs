@@ -18,7 +18,10 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer("name=ConnectionStrings:DefaultConnection"));
+        services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseSqlServer(
+                "name=ConnectionStrings:DefaultConnection",
+                sqlOptions => sqlOptions.EnableRetryOnFailure()));
 
         // Configure Stripe
         services.Configure<StripeSettings>(configuration.GetSection("Stripe"));
