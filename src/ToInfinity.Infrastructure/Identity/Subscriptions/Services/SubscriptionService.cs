@@ -1,9 +1,11 @@
+using ErrorOr;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Stripe;
 using Stripe.Checkout;
 using ToInfinity.Application.Common.Services;
 using ToInfinity.Application.Subscriptions.Models;
+using ToInfinity.Domain.ValueObjects;
 using ToInfinity.Infrastructure.Identity.Subscriptions.Configuration;
 using ToInfinity.Infrastructure.Identity.Subscriptions.Entities;
 using ToInfinity.Infrastructure.Persistence;
@@ -25,12 +27,12 @@ public class SubscriptionService : ISubscriptionService
         _stripeSettings = stripeSettings.Value;
     }
 
-    public async Task<bool> HasActiveSubscriptionAsync(
-        Guid userId,
+    public async Task<ErrorOr<bool>> HasActiveSubscriptionAsync(
+        UserId userId,
         CancellationToken cancellationToken = default)
     {
         var user = await _context.Users
-            .Where(u => u.Id == userId)
+            .Where(u => u.Id == userId.Value)
             .Select(u => new
             {
                 u.SubscriptionStatus,
@@ -38,25 +40,28 @@ public class SubscriptionService : ISubscriptionService
             })
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (user == null) return false;
+        if (user is null)
+            return Error.NotFound("User.NotFound", "User not found");
 
         return user.SubscriptionStatus == SubscriptionStatus.Active &&
                user.SubscriptionExpiresAt.HasValue &&
                user.SubscriptionExpiresAt.Value > DateTime.UtcNow;
     }
 
-    public async Task<SubscriptionModel?> GetUserSubscriptionAsync(
-        Guid userId,
+    public async Task<ErrorOr<SubscriptionModel>> GetUserSubscriptionAsync(
+        UserId userId,
         CancellationToken cancellationToken = default)
     {
-        // Get the current subscription (using CurrentSubscriptionId)
         var user = await _context.Users
             .Include(u => u.CurrentSubscription)
-            .Where(u => u.Id == userId)
+            .Where(u => u.Id == userId.Value)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (user?.CurrentSubscription == null)
-            return null;
+        if (user is null)
+            return Error.NotFound("User.NotFound", "User not found");
+
+        if (user.CurrentSubscription is null)
+            return Error.NotFound("Subscription.NotFound", "No subscription found for this user");
 
         var subscription = user.CurrentSubscription;
 
@@ -75,21 +80,29 @@ public class SubscriptionService : ISubscriptionService
         );
     }
 
-    public async Task<SubscriptionModel?> GetActiveSubscriptionAsync(
-        Guid userId,
+    public async Task<ErrorOr<SubscriptionModel>> GetActiveSubscriptionAsync(
+        UserId userId,
         CancellationToken cancellationToken = default)
     {
-        var subscription = await GetUserSubscriptionAsync(userId, cancellationToken);
+        var result = await GetUserSubscriptionAsync(userId, cancellationToken);
 
-        return subscription?.IsActive == true ? subscription : null;
+        return result.Match<ErrorOr<SubscriptionModel>>(
+            subscription => subscription.IsActive
+                ? subscription
+                : Error.NotFound("Subscription.NotActive", "No active subscription found"),
+            errors => errors);
     }
 
-    public async Task<List<SubscriptionModel>> GetSubscriptionHistoryAsync(
-        Guid userId,
+    public async Task<ErrorOr<List<SubscriptionModel>>> GetSubscriptionHistoryAsync(
+        UserId userId,
         CancellationToken cancellationToken = default)
     {
+        var userExists = await _context.Users.AnyAsync(u => u.Id == userId.Value, cancellationToken);
+        if (!userExists)
+            return Error.NotFound("User.NotFound", "User not found");
+
         var subscriptions = await _context.Subscriptions
-            .Where(s => s.UserId == userId)
+            .Where(s => s.UserId == userId.Value)
             .OrderByDescending(s => s.CreatedAt)
             .ToListAsync(cancellationToken);
 
@@ -108,54 +121,117 @@ public class SubscriptionService : ISubscriptionService
         )).ToList();
     }
 
-    public async Task<string> CreateSubscriptionCheckoutAsync(
-        Guid userId,
+    public async Task<ErrorOr<string>> CreateSubscriptionCheckoutAsync(
+        UserId userId,
         PlanType planType,
         CancellationToken cancellationToken = default)
     {
         var user = await _context.Users
-            .Where(u => u.Id == userId)
+            .Where(u => u.Id == userId.Value)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (user == null)
-            throw new InvalidOperationException("User not found");
+        if (user is null)
+            return Error.NotFound("User.NotFound", "User not found");
 
-        // Get plan configuration
-        var planConfig = _stripeSettings.Plans[planType.ToString()];
+        if (string.IsNullOrEmpty(user.StripeCustomerId))
+            return Error.Unexpected("User.NoStripeCustomer", "User has no Stripe customer ID");
 
-        // Create Stripe Checkout Session
-        var options = new SessionCreateOptions
+        if (user.CurrentPlan == planType && user.SubscriptionStatus == SubscriptionStatus.Active)
+            return Error.Conflict("Subscription.AlreadyActive", "Already subscribed to this plan");
+
+        if (!_stripeSettings.Plans.TryGetValue(planType.ToString(), out var planConfig))
+            return Error.NotFound("Plan.NotFound", $"Plan '{planType}' not found in configuration");
+
+        var sessionService = new SessionService();
+        var session = await sessionService.CreateAsync(new SessionCreateOptions
         {
+            Customer = user.StripeCustomerId,
             Mode = "subscription",
-            CustomerEmail = user.Email,
             LineItems = new List<SessionLineItemOptions>
             {
-                new()
-                {
-                    Price = planConfig.PriceId,
-                    Quantity = 1
-                }
+                new() { Price = planConfig.PriceId, Quantity = 1 }
             },
-            SuccessUrl = _stripeSettings.SuccessUrl,
+            SuccessUrl = _stripeSettings.SuccessUrl + "?session_id={CHECKOUT_SESSION_ID}",
             CancelUrl = _stripeSettings.CancelUrl,
             Metadata = new Dictionary<string, string>
             {
-                { "userId", userId.ToString() },
+                { "userId", userId.Value.ToString() },
                 { "planType", planType.ToString() }
             }
-        };
-
-        var service = new SessionService();
-        var session = await service.CreateAsync(options, cancellationToken: cancellationToken);
+        }, cancellationToken: cancellationToken);
 
         return session.Url;
     }
 
-    public async Task CompleteSubscriptionCheckoutAsync(
+    public async Task<ErrorOr<Success>> HandleWebhookAsync(
+        string json,
+        string signature,
+        CancellationToken cancellationToken = default)
+    {
+        Event stripeEvent;
+
+        try
+        {
+            stripeEvent = EventUtility.ConstructEvent(json, signature, _stripeSettings.WebhookSecret);
+        }
+        catch (StripeException)
+        {
+            return Error.Validation("Webhook.InvalidSignature", "Invalid Stripe webhook signature");
+        }
+
+        switch (stripeEvent.Type)
+        {
+            case "checkout.session.completed":
+                var session = stripeEvent.Data.Object as Session;
+                if (session is not null)
+                    await CompleteSubscriptionCheckoutAsync(session.Id, cancellationToken);
+                break;
+
+            case "customer.subscription.updated":
+            case "customer.subscription.deleted":
+                var subscription = stripeEvent.Data.Object as StripeSubscription;
+                if (subscription is not null)
+                    await SyncSubscriptionStatusAsync(subscription.Id, cancellationToken);
+                break;
+        }
+
+        return Result.Success;
+    }
+
+    public async Task<ErrorOr<Success>> CancelSubscriptionAsync(
+        UserId userId,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _context.Users
+            .Include(u => u.CurrentSubscription)
+            .FirstOrDefaultAsync(u => u.Id == userId.Value, cancellationToken);
+
+        if (user is null)
+            return Error.NotFound("User.NotFound", "User not found");
+
+        if (user.CurrentSubscription is null)
+            return Error.NotFound("Subscription.NotFound", "No active subscription to cancel");
+
+        // Cancel in Stripe
+        var service = new StripeSubscriptionService();
+        await service.CancelAsync(
+            user.CurrentSubscription.StripeSubscriptionId,
+            cancellationToken: cancellationToken);
+
+        // Update locally
+        user.CurrentSubscription.Status = SubscriptionStatus.Canceled;
+        user.CurrentSubscription.CanceledAt = DateTime.UtcNow;
+        user.SubscriptionStatus = SubscriptionStatus.Canceled;
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return Result.Success;
+    }
+
+    private async Task CompleteSubscriptionCheckoutAsync(
         string checkoutSessionId,
         CancellationToken cancellationToken = default)
     {
-        // Retrieve Stripe session
         var sessionService = new SessionService();
         var session = await sessionService.GetAsync(
             checkoutSessionId,
@@ -165,21 +241,16 @@ public class SubscriptionService : ISubscriptionService
             },
             cancellationToken: cancellationToken);
 
-        // Extract metadata
         var userId = Guid.Parse(session.Metadata["userId"]);
         var planType = Enum.Parse<PlanType>(session.Metadata["planType"]);
 
-        // Get subscription ID and fetch full details
         var subscriptionId = session.SubscriptionId;
         var stripeSvc = new StripeSubscriptionService();
         var stripeSubscription = await stripeSvc.GetAsync(subscriptionId, cancellationToken: cancellationToken);
 
         var planConfig = _stripeSettings.Plans[planType.ToString()];
-
-        // Stripe subscriptions are annual, expire 1 year from now
         var periodEnd = DateTime.UtcNow.AddYears(1);
 
-        // Create subscription record
         var subscription = new Entities.Subscription
         {
             Id = Guid.NewGuid(),
@@ -198,41 +269,36 @@ public class SubscriptionService : ISubscriptionService
 
         await _context.Subscriptions.AddAsync(subscription, cancellationToken);
 
-        // Update user
         var user = await _context.Users.FindAsync(new object[] { userId }, cancellationToken);
-        if (user != null)
+        if (user is not null)
         {
             user.CurrentPlan = planType;
             user.SubscriptionStatus = SubscriptionStatus.Active;
             user.SubscriptionExpiresAt = periodEnd;
-            user.StripeCustomerId = session.CustomerId!;
             user.CurrentSubscriptionId = subscription.Id;
         }
 
         await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task SyncSubscriptionStatusAsync(
+    private async Task SyncSubscriptionStatusAsync(
         string externalSubscriptionId,
         CancellationToken cancellationToken = default)
     {
-        // Get subscription from Stripe
         var subscriptionService = new StripeSubscriptionService();
         StripeSubscription stripeSubscription = await subscriptionService.GetAsync(
             externalSubscriptionId,
             cancellationToken: cancellationToken);
 
-        // Find subscription in DB
         var subscription = await _context.Subscriptions
             .Include(s => s.User)
             .FirstOrDefaultAsync(
                 s => s.StripeSubscriptionId == externalSubscriptionId,
                 cancellationToken);
 
-        if (subscription == null)
+        if (subscription is null)
             return;
 
-        // Map Stripe status to our status
         var subscriptionStatus = stripeSubscription.Status switch
         {
             "active" => SubscriptionStatus.Active,
@@ -242,8 +308,6 @@ public class SubscriptionService : ISubscriptionService
             _ => SubscriptionStatus.None
         };
 
-        // Calculate period end - in real implementation, parse from Stripe's raw JSON response
-        // For now, use the EndDate from our DB or calculate based on subscription start
         var periodEnd = subscription.EndDate ?? DateTime.UtcNow.AddYears(1);
 
         subscription.Status = subscriptionStatus;
@@ -255,34 +319,8 @@ public class SubscriptionService : ISubscriptionService
             subscription.CanceledAt = DateTime.UtcNow;
         }
 
-        // Update user
         subscription.User.SubscriptionStatus = subscriptionStatus;
         subscription.User.SubscriptionExpiresAt = periodEnd;
-
-        await _context.SaveChangesAsync(cancellationToken);
-    }
-
-    public async Task CancelSubscriptionAsync(
-        Guid userId,
-        CancellationToken cancellationToken = default)
-    {
-        var user = await _context.Users
-            .Include(u => u.CurrentSubscription)
-            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
-
-        if (user?.CurrentSubscription == null)
-            throw new InvalidOperationException("No active subscription");
-
-        // Cancel in Stripe
-        var service = new StripeSubscriptionService();
-        await service.CancelAsync(
-            user.CurrentSubscription.StripeSubscriptionId,
-            cancellationToken: cancellationToken);
-
-        // Update locally
-        user.CurrentSubscription.Status = SubscriptionStatus.Canceled;
-        user.CurrentSubscription.CanceledAt = DateTime.UtcNow;
-        user.SubscriptionStatus = SubscriptionStatus.Canceled;
 
         await _context.SaveChangesAsync(cancellationToken);
     }

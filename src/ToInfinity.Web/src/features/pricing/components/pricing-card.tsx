@@ -4,15 +4,17 @@ import StarIcon from "@mui/icons-material/Star";
 import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 import type { PricingPlan } from "../types";
 import PricingExtras from "./pricing-extras";
+import { useCreateCheckoutSession } from "../hooks";
 
 interface PricingCardProps {
   plan: PricingPlan;
 }
 
 const PricingCard = ({ plan }: PricingCardProps) => {
+  const createCheckoutSession = useCreateCheckoutSession();
+
   const handleCTA = () => {
-    // TODO: Implement CTA handler based on plan and your needs
-    console.log(`${plan.name} button clicked`);
+    createCheckoutSession.mutate(plan.name);
   };
 
   return (
@@ -157,6 +159,7 @@ const PricingCard = ({ plan }: PricingCardProps) => {
           variant={plan.highlighted ? "contained" : "outlined"}
           size="large"
           onClick={handleCTA}
+          disabled={createCheckoutSession.isPending}
           sx={
             plan.highlighted
               ? {

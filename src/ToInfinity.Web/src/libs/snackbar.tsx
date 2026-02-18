@@ -1,8 +1,9 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { ReactNode } from "react";
 import { Snackbar, Alert } from "@mui/material";
 import type { AlertColor } from "@mui/material";
 import { SnackbarContext } from "./snackbar-context";
+import { snackbarEmitter } from "./snackbar-emitter";
 
 interface SnackbarProviderProps {
   children: ReactNode;
@@ -18,6 +19,11 @@ export function SnackbarProvider({ children }: SnackbarProviderProps) {
     setSeverity(sev);
     setOpen(true);
   }, []);
+
+  // Subscribe to emitter so Axios interceptor errors show as snackbars
+  useEffect(() => {
+    return snackbarEmitter.subscribe(showSnackbar);
+  }, [showSnackbar]);
 
   const handleClose = (
     _event?: React.SyntheticEvent | Event,

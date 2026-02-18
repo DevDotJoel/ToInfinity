@@ -33,10 +33,13 @@ public class CreateWeddingVenueOnboardingCommandHandler
         var userId = command.UserId;
 
         // Check if user has an active subscription
-        var hasActiveSubscription = await _subscriptionService
-            .HasActiveSubscriptionAsync(userId.Value, cancellationToken);
+        var subscriptionResult = await _subscriptionService
+            .HasActiveSubscriptionAsync(userId, cancellationToken);
 
-        if (!hasActiveSubscription)
+        if (subscriptionResult.IsError)
+            return subscriptionResult.Errors;
+
+        if (!subscriptionResult.Value)
         {
             return Error.Forbidden(
                 code: "Subscription.Required",

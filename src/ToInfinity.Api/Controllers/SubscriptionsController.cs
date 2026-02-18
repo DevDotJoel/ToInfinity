@@ -1,8 +1,6 @@
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Stripe;
-using Stripe.Checkout;
 using ToInfinity.Application.Common.Services;
 using ToInfinity.Application.Subscriptions.Models;
 using ToInfinity.Contracts.Subscriptions;
@@ -15,18 +13,15 @@ public class SubscriptionsController : ApiController
     private readonly ISubscriptionService _subscriptionService;
     private readonly IUserContext _userContext;
     private readonly IMapper _mapper;
-    private readonly IConfiguration _configuration;
 
     public SubscriptionsController(
         ISubscriptionService subscriptionService,
         IUserContext userContext,
-        IMapper mapper,
-        IConfiguration configuration)
+        IMapper mapper)
     {
         _subscriptionService = subscriptionService;
         _userContext = userContext;
         _mapper = mapper;
-        _configuration = configuration;
     }
 
     [HttpPost("checkout")]
@@ -36,14 +31,16 @@ public class SubscriptionsController : ApiController
         CancellationToken cancellationToken)
     {
         var planType = Enum.Parse<PlanType>(request.PlanType);
-        var userId = _userContext.GetCurrentUserId().Value;
+        var userId = _userContext.GetCurrentUserId();
 
-        var checkoutUrl = await _subscriptionService.CreateSubscriptionCheckoutAsync(
+        var result = await _subscriptionService.CreateSubscriptionCheckoutAsync(
             userId,
             planType,
             cancellationToken);
 
-        return Ok(new CreateCheckoutSessionResponse(checkoutUrl));
+        return result.Match(
+            url => Ok(new CreateCheckoutSessionResponse(url)),
+            Problem);
     }
 
     [HttpGet("current")]
@@ -51,16 +48,15 @@ public class SubscriptionsController : ApiController
     public async Task<IActionResult> GetCurrentSubscription(
         CancellationToken cancellationToken)
     {
-        var userId = _userContext.GetCurrentUserId().Value;
+        var userId = _userContext.GetCurrentUserId();
 
-        var subscription = await _subscriptionService.GetUserSubscriptionAsync(
+        var result = await _subscriptionService.GetUserSubscriptionAsync(
             userId,
             cancellationToken);
 
-        if (subscription == null)
-            return NotFound();
-
-        return Ok(_mapper.Map<SubscriptionResponse>(subscription));
+        return result.Match(
+            subscription => Ok(_mapper.Map<SubscriptionResponse>(subscription)),
+            Problem);
     }
 
     [HttpPost("webhook")]
@@ -69,54 +65,29 @@ public class SubscriptionsController : ApiController
     {
         var json = await new StreamReader(Request.Body).ReadToEndAsync();
         var signature = Request.Headers["Stripe-Signature"].ToString();
-        var webhookSecret = _configuration["Stripe:WebhookSecret"];
 
-        try
-        {
-            var stripeEvent = EventUtility.ConstructEvent(json, signature, webhookSecret);
+        var result = await _subscriptionService.HandleWebhookAsync(
+            json,
+            signature,
+            cancellationToken);
 
-            switch (stripeEvent.Type)
-            {
-                case "checkout.session.completed":
-                    var session = stripeEvent.Data.Object as Session;
-                    if (session != null)
-                    {
-                        await _subscriptionService.CompleteSubscriptionCheckoutAsync(
-                            session.Id,
-                            cancellationToken);
-                    }
-                    break;
-
-                case "customer.subscription.updated":
-                case "customer.subscription.deleted":
-                    var subscription = stripeEvent.Data.Object as Stripe.Subscription;
-                    if (subscription != null)
-                    {
-                        await _subscriptionService.SyncSubscriptionStatusAsync(
-                            subscription.Id,
-                            cancellationToken);
-                    }
-                    break;
-            }
-
-            return Ok();
-        }
-        catch (StripeException)
-        {
-            return BadRequest();
-        }
+        return result.Match(
+            _ => Ok(),
+            Problem);
     }
 
     [HttpPost("cancel")]
     [Authorize]
     public async Task<IActionResult> CancelSubscription(CancellationToken cancellationToken)
     {
-        var userId = _userContext.GetCurrentUserId().Value;
+        var userId = _userContext.GetCurrentUserId();
 
-        await _subscriptionService.CancelSubscriptionAsync(
+        var result = await _subscriptionService.CancelSubscriptionAsync(
             userId,
             cancellationToken);
 
-        return Ok();
+        return result.Match(
+            _ => Ok(),
+            Problem);
     }
 }

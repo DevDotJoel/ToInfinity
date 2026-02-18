@@ -5,6 +5,7 @@ using ErrorOr;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Stripe;
 using ToInfinity.Application.Auth.Models;
 using ToInfinity.Application.Common.Identity;
 using ToInfinity.Domain.ValueObjects;
@@ -75,6 +76,16 @@ public class IdentityService : IIdentityService
                 code: "User.RoleAssignmentFailed",
                 description: string.Join(", ", roleResult.Errors.Select(e => e.Description)));
         }
+
+        // Create Stripe Customer
+        var customerService = new CustomerService();
+        var stripeCustomer = await customerService.CreateAsync(new CustomerCreateOptions
+        {
+            Email = user.Email,
+            Name = $"{user.FirstName} {user.LastName}",
+            Metadata = new Dictionary<string, string> { { "UserId", user.Id.ToString() } }
+        });
+        user.StripeCustomerId = stripeCustomer.Id;
 
         var roles = new List<string> { "User" };
         var tokenResult = _tokenClaimService.GenerateAccessToken(user.Id, user.Email!, roles);
@@ -306,6 +317,16 @@ public class IdentityService : IIdentityService
 
                 // Assign default role
                 await _userManager.AddToRoleAsync(user, "User");
+
+                // Create Stripe Customer
+                var customerService = new CustomerService();
+                var stripeCustomer = await customerService.CreateAsync(new CustomerCreateOptions
+                {
+                    Email = user.Email,
+                    Name = $"{user.FirstName} {user.LastName}",
+                    Metadata = new Dictionary<string, string> { { "UserId", user.Id.ToString() } }
+                });
+                user.StripeCustomerId = stripeCustomer.Id;
             }
             else
             {

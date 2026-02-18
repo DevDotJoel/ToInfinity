@@ -1,17 +1,18 @@
+using ErrorOr;
 using ToInfinity.Application.Subscriptions.Models;
+using ToInfinity.Domain.ValueObjects;
 
 namespace ToInfinity.Application.Common.Services;
 
 public interface ISubscriptionService
 {
-    Task<bool> HasActiveSubscriptionAsync(Guid userId, CancellationToken cancellationToken = default);
-    Task<SubscriptionModel?> GetUserSubscriptionAsync(Guid userId, CancellationToken cancellationToken = default);
-    Task<SubscriptionModel?> GetActiveSubscriptionAsync(Guid userId, CancellationToken cancellationToken = default);
-    Task<List<SubscriptionModel>> GetSubscriptionHistoryAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<ErrorOr<bool>> HasActiveSubscriptionAsync(UserId userId, CancellationToken cancellationToken = default);
+    Task<ErrorOr<SubscriptionModel>> GetUserSubscriptionAsync(UserId userId, CancellationToken cancellationToken = default);
+    Task<ErrorOr<SubscriptionModel>> GetActiveSubscriptionAsync(UserId userId, CancellationToken cancellationToken = default);
+    Task<ErrorOr<List<SubscriptionModel>>> GetSubscriptionHistoryAsync(UserId userId, CancellationToken cancellationToken = default);
 
     // Checkout and payment methods
-    Task<string> CreateSubscriptionCheckoutAsync(Guid userId, PlanType planType, CancellationToken cancellationToken = default);
-    Task CompleteSubscriptionCheckoutAsync(string checkoutSessionId, CancellationToken cancellationToken = default);
-    Task SyncSubscriptionStatusAsync(string externalSubscriptionId, CancellationToken cancellationToken = default);
-    Task CancelSubscriptionAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<ErrorOr<string>> CreateSubscriptionCheckoutAsync(UserId userId, PlanType planType, CancellationToken cancellationToken = default);
+    Task<ErrorOr<Success>> HandleWebhookAsync(string json, string signature, CancellationToken cancellationToken = default);
+    Task<ErrorOr<Success>> CancelSubscriptionAsync(UserId userId, CancellationToken cancellationToken = default);
 }
