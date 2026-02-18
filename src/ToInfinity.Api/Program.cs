@@ -75,11 +75,12 @@ builder.Services.AddInMemoryRateLimiting();
 builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
 
 // Configure CORS
+var frontendUrl = builder.Configuration["WebApp:FrontendPublicUrl"] ?? "https://localhost:3000";
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("frontend", policy =>
     {
-        policy.WithOrigins("https://localhost:3000") // Specific frontend origin
+        policy.WithOrigins(frontendUrl)
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials(); // Required for cookies
