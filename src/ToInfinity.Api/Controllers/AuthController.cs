@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using ToInfinity.Application.Common.Identity;
 using ToInfinity.Application.Common.Services;
 using ToInfinity.Contracts.Auth;
@@ -10,10 +11,12 @@ namespace ToInfinity.Api.Controllers;
 public class AuthController : ApiController
 {
     private readonly IIdentityService _identityService;
+    private readonly IConfiguration _configuration;
 
-    public AuthController(IIdentityService identityService)
+    public AuthController(IIdentityService identityService, IConfiguration configuration)
     {
         _identityService = identityService;
+        _configuration = configuration;
     }
 
     [AllowAnonymous]
@@ -169,6 +172,7 @@ public class AuthController : ApiController
             HttpOnly = true,
             Secure = true, // Require HTTPS
             SameSite = SameSiteMode.None, // Required for cross-origin with credentials
+            Domain = GetCookieDomain(), // Share cookies across subdomains in production
             Expires = DateTimeOffset.UtcNow.AddDays(7)
         };
 
@@ -178,8 +182,13 @@ public class AuthController : ApiController
 
     private void ClearAuthCookies()
     {
-        Response.Cookies.Delete("accessToken");
-        Response.Cookies.Delete("refreshToken");
+        var cookieOptions = new CookieOptions
+        {
+            Domain = GetCookieDomain() // Must match the domain used when setting
+        };
+
+        Response.Cookies.Delete("accessToken", cookieOptions);
+        Response.Cookies.Delete("refreshToken", cookieOptions);
     }
 
     private static string ValidateReturnUrl(string returnUrl)
@@ -193,5 +202,30 @@ public class AuthController : ApiController
         }
 
         return returnUrl;
+    }
+
+    private string? GetCookieDomain()
+    {
+        var backendHost = _configuration["WebApp:BackendHost"];
+
+        // In development (localhost), don't set a domain
+        if (backendHost?.Contains("localhost") == true)
+        {
+            return null;
+        }
+
+        // In production, extract the root domain and prefix with .
+        // Example: "api.too-infinity.com" → ".too-infinity.com"
+        if (!string.IsNullOrEmpty(backendHost))
+        {
+            var hostParts = backendHost.Split(':')[0].Split('.');
+            if (hostParts.Length >= 2)
+            {
+                var rootDomain = $"{hostParts[^2]}.{hostParts[^1]}";
+                return $".{rootDomain}";
+            }
+        }
+
+        return null;
     }
 }
