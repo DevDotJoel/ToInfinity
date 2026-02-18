@@ -13,9 +13,9 @@ export const useCreateCheckoutSession = ({
 
   return useMutation({
     mutationFn: createCheckoutSession,
-    onSuccess: (data, ...args) => {
+    onSuccess: (data) => {
       window.location.href = data.checkoutUrl;
-      onSuccess?.(data, ...args);
+      onSuccess?.(data);
     },
     ...restConfig,
   });
