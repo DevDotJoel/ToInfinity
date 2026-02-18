@@ -22,11 +22,11 @@ api.interceptors.response.use(
       _retry?: boolean;
     };
 
-    // Don't redirect for /auth/me endpoint - it's used to check auth status
-    const isAuthCheckEndpoint = originalRequest?.url?.includes("/auth/me");
+    // Don't retry refresh endpoint to prevent infinite loop
+    const isRefreshEndpoint = originalRequest?.url?.includes("/auth/refresh");
 
     // Handle 401 errors with token refresh
-    if (error.response?.status === 401 && !originalRequest._retry && !isAuthCheckEndpoint) {
+    if (error.response?.status === 401 && !originalRequest._retry && !isRefreshEndpoint) {
       originalRequest._retry = true;
 
       try {

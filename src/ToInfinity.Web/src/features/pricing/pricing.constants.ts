@@ -50,7 +50,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     id: "elite",
     number: 3,
     name: "Elite",
-    price: "2,337",
+    price: "1,900",
     bestFor: ["Venues that want maximum visibility in their region"],
     features: [
       "1 wedding venue profile",
