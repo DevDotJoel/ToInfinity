@@ -89,14 +89,22 @@ public class WeddingVenueRepository : IWeddingVenueRepository
     }
 
     public async Task<List<WeddingVenue>> SearchAsync(
+        string? searchTerm,
         CountryId? countryId,
         DistrictId? districtId,
         MunicipalityId? municipalityId,
+        string? sortBy,
         int page,
         int size,
         CancellationToken cancellationToken = default)
     {
         var query = _context.WeddingVenues.AsNoTracking().AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var term = searchTerm.Trim().ToLower();
+            query = query.Where(v => v.Name.ToLower().Contains(term));
+        }
 
         if (municipalityId is not null)
         {
@@ -125,6 +133,14 @@ public class WeddingVenueRepository : IWeddingVenueRepository
 
             query = query.Where(v => municipalityIds.Contains(v.MunicipalityId));
         }
+
+        query = sortBy switch
+        {
+            "price-low" => query.OrderBy(v => v.PricePerPerson),
+            "price-high" => query.OrderByDescending(v => v.PricePerPerson),
+            "capacity" => query.OrderByDescending(v => v.Capacity),
+            _ => query.OrderBy(v => v.PricePerPerson),
+        };
 
         return await query
             .Skip((page - 1) * size)

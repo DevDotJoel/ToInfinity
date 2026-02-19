@@ -1,7 +1,13 @@
 import { api } from "../../libs/api-client";
-import type { Venue } from "./types";
+import type { Venue, SearchVenuesParams } from "./types";
 import type { CreateVenueFormData } from "./schemas/create-venue.schema";
 import type { EditVenueFormData } from "./schemas/edit-venue.schema";
+
+export const searchVenues = async (
+  params: SearchVenuesParams = {}
+): Promise<Venue[]> => {
+  return api.get("/api/venues/search", { params });
+};
 
 export const getVenues = async (): Promise<Venue[]> => {
   return api.get("/api/venues");

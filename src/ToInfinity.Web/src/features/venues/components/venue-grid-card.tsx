@@ -5,27 +5,13 @@ import Typography from "@mui/material/Typography";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardActionArea from "@mui/material/CardActionArea";
-import Chip from "@mui/material/Chip";
-import Rating from "@mui/material/Rating";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import PeopleIcon from "@mui/icons-material/People";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
-
-interface Venue {
-  id: string;
-  name: string;
-  type: string;
-  location: string;
-  rating: number;
-  reviewCount: number;
-  capacity: number;
-  price: number;
-  image: string;
-  description: string;
-}
+import type { Venue } from "../types";
 
 interface VenueGridCardProps {
   venue: Venue;
@@ -35,8 +21,6 @@ interface VenueGridCardProps {
 
 export const VenueGridCard = memo(
   ({ venue, isFavorite, onFavoriteToggle }: VenueGridCardProps) => {
-    const pricePerPerson = Math.round(venue.price / venue.capacity);
-
     return (
       <Card
         sx={{
@@ -68,9 +52,9 @@ export const VenueGridCard = memo(
               justifyContent: "center",
             }}
           >
-            {venue.image ? (
+            {venue.mainImageUrl ? (
               <img
-                src={venue.image}
+                src={venue.mainImageUrl}
                 alt={venue.name}
                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
@@ -80,19 +64,6 @@ export const VenueGridCard = memo(
               </Typography>
             )}
           </CardActionArea>
-          <Chip
-            label={venue.type}
-            size="small"
-            sx={{
-              position: "absolute",
-              top: 10,
-              left: 10,
-              bgcolor: "rgba(255,255,255,0.92)",
-              color: "primary.main",
-              fontWeight: 600,
-              fontSize: "0.72rem",
-            }}
-          />
           <IconButton
             onClick={() => onFavoriteToggle(venue.id)}
             aria-label={
@@ -141,7 +112,7 @@ export const VenueGridCard = memo(
               variant="caption"
               sx={{ color: "text.secondary", fontSize: "0.78rem" }}
             >
-              {venue.location}
+              {venue.postalCode}
             </Typography>
           </Box>
           <Box
@@ -161,7 +132,7 @@ export const VenueGridCard = memo(
                 fontSize: "0.88rem",
               }}
             >
-              €{pricePerPerson} / person
+              €{venue.pricePerPerson} / person
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.3 }}>
               <PeopleIcon sx={{ color: "text.secondary", fontSize: 15 }} />
@@ -172,26 +143,6 @@ export const VenueGridCard = memo(
                 {venue.capacity}
               </Typography>
             </Box>
-          </Box>
-          <Box
-            sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 1.5 }}
-          >
-            <Rating
-              value={venue.rating}
-              precision={0.1}
-              size="small"
-              readOnly
-              sx={{
-                "& .MuiRating-iconFilled": { color: "#d4a853" },
-                fontSize: "0.9rem",
-              }}
-            />
-            <Typography
-              variant="caption"
-              sx={{ color: "text.secondary", fontSize: "0.72rem" }}
-            >
-              ({venue.reviewCount})
-            </Typography>
           </Box>
           <Button
             component={RouterLink}

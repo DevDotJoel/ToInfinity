@@ -30,9 +30,11 @@ public class SearchVenuesQueryHandler
         var municipalityId = query.MunicipalityId.HasValue ? MunicipalityId.Create(query.MunicipalityId.Value) : null;
 
         var venues = await _venueRepository.SearchAsync(
+            query.SearchTerm,
             countryId,
             districtId,
             municipalityId,
+            query.SortBy,
             query.Page,
             query.Size,
             cancellationToken);

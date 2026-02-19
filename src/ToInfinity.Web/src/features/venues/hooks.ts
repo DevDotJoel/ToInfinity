@@ -1,11 +1,20 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as venuesApi from "./api";
+import type { SearchVenuesParams } from "./types";
 import type { CreateVenueFormData } from "./schemas/create-venue.schema";
 import type { EditVenueFormData } from "./schemas/edit-venue.schema";
 import type { MutationConfig } from "../../libs/react-query";
 
 const VENUES_QUERY_KEY = "venues";
 const MY_VENUES_QUERY_KEY = "my-venues";
+const SEARCH_VENUES_QUERY_KEY = "search-venues";
+
+export const useSearchVenues = (params: SearchVenuesParams = {}) => {
+  return useQuery({
+    queryKey: [SEARCH_VENUES_QUERY_KEY, params],
+    queryFn: () => venuesApi.searchVenues(params),
+  });
+};
 
 export const useVenues = () => {
   return useQuery({

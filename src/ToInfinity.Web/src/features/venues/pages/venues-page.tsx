@@ -1,13 +1,15 @@
 import { useState, useMemo, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Paper from "@mui/material/Paper";
 import Drawer from "@mui/material/Drawer";
 import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
-import { venues, venueTypes } from "../../../lib/data";
+import { useSearchVenues } from "../hooks";
 import { VenueListCard } from "../components/venue-list-card";
 import { VenueGridCard } from "../components/venue-grid-card";
 import { VenueFiltersSidebar } from "../components/venue-filters-sidebar";
@@ -15,17 +17,115 @@ import { VenueSearchBar } from "../components/venue-search-bar";
 
 const SIDEBAR_WIDTH = 280;
 
+const VENUE_TYPES = [
+  "All",
+  "Ballroom",
+  "Barn",
+  "Beach",
+  "Garden",
+  "Hotel",
+  "Restaurant",
+];
+
+interface LocationFilter {
+  countryId?: number;
+  districtId?: number;
+  municipalityId?: number;
+}
+
 export default function VenuesPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Derive location filter from URL search params
+  const locationFilter: LocationFilter = useMemo(() => {
+    const countryId = searchParams.get("countryId");
+    const districtId = searchParams.get("districtId");
+    const municipalityId = searchParams.get("municipalityId");
+    return {
+      countryId: countryId ? Number(countryId) : undefined,
+      districtId: districtId ? Number(districtId) : undefined,
+      municipalityId: municipalityId ? Number(municipalityId) : undefined,
+    };
+  }, [searchParams]);
+
+  // Derive search term and sort from URL search params
+  const searchTerm = searchParams.get("search") ?? "";
+  const sortBy = searchParams.get("sortBy") ?? "price-low";
+
+  const setLocationFilter = useCallback(
+    (filter: LocationFilter) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          // Clear old location params
+          next.delete("countryId");
+          next.delete("districtId");
+          next.delete("municipalityId");
+          // Set new ones
+          if (filter.countryId !== undefined)
+            next.set("countryId", String(filter.countryId));
+          if (filter.districtId !== undefined)
+            next.set("districtId", String(filter.districtId));
+          if (filter.municipalityId !== undefined)
+            next.set("municipalityId", String(filter.municipalityId));
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
   // Filter state
-  const [searchInput, setSearchInput] = useState("");
+  const [searchInput, setSearchInput] = useState(searchTerm);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState("rating");
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [favorites, setFavorites] = useState<string[]>([]);
+
+  // Fetch venues from API with all filters (backend handles search, sort, location)
+  const { data: venues = [], isLoading } = useSearchVenues({
+    searchTerm: searchTerm || undefined,
+    countryId: locationFilter.countryId,
+    districtId: locationFilter.districtId,
+    municipalityId: locationFilter.municipalityId,
+    sortBy,
+  });
+
+  const handleSearchSubmit = useCallback(() => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (searchInput.trim()) {
+          next.set("search", searchInput.trim());
+        } else {
+          next.delete("search");
+        }
+        return next;
+      },
+      { replace: true },
+    );
+  }, [searchInput, setSearchParams]);
+
+  const handleSortChange = useCallback(
+    (value: string) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (value && value !== "price-low") {
+            next.set("sortBy", value);
+          } else {
+            next.delete("sortBy");
+          }
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
   const handleTypeToggle = useCallback((type: string) => {
     setSelectedTypes((prev) =>
@@ -40,32 +140,28 @@ export default function VenuesPage() {
   }, []);
 
   const clearAllFilters = useCallback(() => {
+    setLocationFilter({});
     setSelectedTypes([]);
-  }, []);
+    setSearchInput("");
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("search");
+        next.delete("sortBy");
+        next.delete("countryId");
+        next.delete("districtId");
+        next.delete("municipalityId");
+        return next;
+      },
+      { replace: true },
+    );
+  }, [setLocationFilter, setSearchParams]);
 
-  // Client-side filtering for mock data (will be replaced with API params)
-  const filtered = useMemo(() => {
-    const searchLower = searchInput.toLowerCase();
-    const result = venues.filter((v) => {
-      const matchesSearch =
-        !searchInput || v.name.toLowerCase().includes(searchLower);
-      const matchesType =
-        selectedTypes.length === 0 || selectedTypes.includes(v.type);
-      return matchesSearch && matchesType;
-    });
-
-    if (sortBy === "rating") {
-      result.sort((a, b) => b.rating - a.rating);
-    } else if (sortBy === "price-low") {
-      result.sort((a, b) => a.price - b.price);
-    } else if (sortBy === "price-high") {
-      result.sort((a, b) => b.price - a.price);
-    } else if (sortBy === "capacity") {
-      result.sort((a, b) => b.capacity - a.capacity);
-    }
-
-    return result;
-  }, [searchInput, selectedTypes, sortBy]);
+  const activeFilterCount =
+    (locationFilter.countryId ? 1 : 0) +
+    (locationFilter.districtId ? 1 : 0) +
+    (locationFilter.municipalityId ? 1 : 0) +
+    selectedTypes.length;
 
   return (
     <Box sx={{ py: { xs: 4, md: 5 } }}>
@@ -96,28 +192,33 @@ export default function VenuesPage() {
         <VenueSearchBar
           searchValue={searchInput}
           onSearchChange={setSearchInput}
+          onSearchSubmit={handleSearchSubmit}
           sortBy={sortBy}
-          onSortChange={setSortBy}
+          onSortChange={handleSortChange}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
-          selectedTypes={selectedTypes}
-          onTypeRemove={handleTypeToggle}
-          onClearAll={clearAllFilters}
+          locationFilter={locationFilter}
+          onLocationFilterChange={setLocationFilter}
           isMobile={isMobile}
           onOpenFilters={() => setDrawerOpen(true)}
-          activeFilterCount={selectedTypes.length}
+          activeFilterCount={activeFilterCount}
         />
 
         {/* Results count */}
-        <Typography
-          variant="body2"
-          sx={{ color: "text.secondary", mb: 2.5, fontSize: "0.88rem" }}
-        >
-          <Box component="span" sx={{ fontWeight: 700, color: "primary.main" }}>
-            {filtered.length}
-          </Box>{" "}
-          {filtered.length === 1 ? "result" : "results"} found
-        </Typography>
+        {!isLoading && (
+          <Typography
+            variant="body2"
+            sx={{ color: "text.secondary", mb: 2.5, fontSize: "0.88rem" }}
+          >
+            <Box
+              component="span"
+              sx={{ fontWeight: 700, color: "primary.main" }}
+            >
+              {venues.length}
+            </Box>{" "}
+            {venues.length === 1 ? "result" : "results"} found
+          </Typography>
+        )}
 
         {/* Main layout: sidebar + results */}
         <Box sx={{ display: "flex", gap: 3, alignItems: "flex-start" }}>
@@ -144,10 +245,10 @@ export default function VenuesPage() {
               }}
             >
               <VenueFiltersSidebar
-                venueTypes={venueTypes}
+                venueTypes={VENUE_TYPES}
                 selectedTypes={selectedTypes}
                 onTypeToggle={handleTypeToggle}
-                onClearAll={clearAllFilters}
+                onClearAll={() => setSelectedTypes([])}
               />
             </Paper>
           )}
@@ -166,10 +267,10 @@ export default function VenuesPage() {
             }}
           >
             <VenueFiltersSidebar
-              venueTypes={venueTypes}
+              venueTypes={VENUE_TYPES}
               selectedTypes={selectedTypes}
               onTypeToggle={handleTypeToggle}
-              onClearAll={clearAllFilters}
+              onClearAll={() => setSelectedTypes([])}
               isMobile
               onClose={() => setDrawerOpen(false)}
             />
@@ -177,7 +278,17 @@ export default function VenuesPage() {
 
           {/* Results */}
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            {filtered.length === 0 ? (
+            {isLoading ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  py: 8,
+                }}
+              >
+                <CircularProgress sx={{ color: "secondary.main" }} />
+              </Box>
+            ) : venues.length === 0 ? (
               <Paper
                 elevation={0}
                 sx={{
@@ -225,7 +336,7 @@ export default function VenuesPage() {
               </Paper>
             ) : viewMode === "list" || isMobile ? (
               <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
-                {filtered.map((venue) => (
+                {venues.map((venue) => (
                   <VenueListCard
                     key={venue.id}
                     venue={venue}
@@ -246,7 +357,7 @@ export default function VenuesPage() {
                   gap: 2.5,
                 }}
               >
-                {filtered.map((venue) => (
+                {venues.map((venue) => (
                   <VenueGridCard
                     key={venue.id}
                     venue={venue}

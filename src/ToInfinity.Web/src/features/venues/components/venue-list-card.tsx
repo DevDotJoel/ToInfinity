@@ -5,8 +5,6 @@ import Typography from "@mui/material/Typography";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardActionArea from "@mui/material/CardActionArea";
-import Chip from "@mui/material/Chip";
-import Rating from "@mui/material/Rating";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
@@ -14,19 +12,7 @@ import PeopleIcon from "@mui/icons-material/People";
 import EuroIcon from "@mui/icons-material/Euro";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
-
-interface Venue {
-  id: string;
-  name: string;
-  type: string;
-  location: string;
-  rating: number;
-  reviewCount: number;
-  capacity: number;
-  price: number;
-  image: string;
-  description: string;
-}
+import type { Venue } from "../types";
 
 interface VenueListCardProps {
   venue: Venue;
@@ -36,8 +22,6 @@ interface VenueListCardProps {
 
 export const VenueListCard = memo(
   ({ venue, isFavorite, onFavoriteToggle }: VenueListCardProps) => {
-    const pricePerPerson = Math.round(venue.price / venue.capacity);
-
     return (
       <Card
         sx={{
@@ -71,9 +55,9 @@ export const VenueListCard = memo(
               justifyContent: "center",
             }}
           >
-            {venue.image ? (
+            {venue.mainImageUrl ? (
               <img
-                src={venue.image}
+                src={venue.mainImageUrl}
                 alt={venue.name}
                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
@@ -146,18 +130,6 @@ export const VenueListCard = memo(
               >
                 {venue.name}
               </Typography>
-              <Chip
-                label={venue.type}
-                size="small"
-                sx={{
-                  bgcolor: "rgba(196,114,78,0.1)",
-                  color: "secondary.dark",
-                  fontWeight: 600,
-                  fontSize: "0.72rem",
-                  flexShrink: 0,
-                  height: 24,
-                }}
-              />
             </Box>
 
             <Box
@@ -168,7 +140,7 @@ export const VenueListCard = memo(
                 variant="body2"
                 sx={{ color: "text.secondary", fontSize: "0.85rem" }}
               >
-                {venue.location}
+                {venue.postalCode}
               </Typography>
             </Box>
 
@@ -213,7 +185,7 @@ export const VenueListCard = memo(
                     fontSize: "0.9rem",
                   }}
                 >
-                  €{pricePerPerson} / person
+                  €{venue.pricePerPerson} / person
                 </Typography>
               </Box>
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
@@ -223,24 +195,6 @@ export const VenueListCard = memo(
                   sx={{ color: "text.secondary", fontSize: "0.85rem" }}
                 >
                   Up to {venue.capacity}
-                </Typography>
-              </Box>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                <Rating
-                  value={venue.rating}
-                  precision={0.1}
-                  size="small"
-                  readOnly
-                  sx={{
-                    "& .MuiRating-iconFilled": { color: "#d4a853" },
-                    fontSize: "1rem",
-                  }}
-                />
-                <Typography
-                  variant="caption"
-                  sx={{ color: "text.secondary", fontSize: "0.78rem" }}
-                >
-                  ({venue.reviewCount})
                 </Typography>
               </Box>
             </Box>

@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import InputAdornment from "@mui/material/InputAdornment";
@@ -9,23 +10,28 @@ import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import Chip from "@mui/material/Chip";
-import Typography from "@mui/material/Typography";
 import SearchIcon from "@mui/icons-material/Search";
 import TuneIcon from "@mui/icons-material/Tune";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import GridViewIcon from "@mui/icons-material/GridView";
+import { useLocations } from "../../locations";
+
+interface LocationFilter {
+  countryId?: number;
+  districtId?: number;
+  municipalityId?: number;
+}
 
 interface VenueSearchBarProps {
   searchValue: string;
   onSearchChange: (value: string) => void;
+  onSearchSubmit: () => void;
   sortBy: string;
   onSortChange: (value: string) => void;
   viewMode: "list" | "grid";
   onViewModeChange: (value: "list" | "grid") => void;
-  selectedTypes: string[];
-  onTypeRemove: (type: string) => void;
-  onClearAll: () => void;
+  locationFilter: LocationFilter;
+  onLocationFilterChange: (filter: LocationFilter) => void;
   isMobile?: boolean;
   onOpenFilters?: () => void;
   activeFilterCount?: number;
@@ -34,17 +40,34 @@ interface VenueSearchBarProps {
 export const VenueSearchBar = ({
   searchValue,
   onSearchChange,
+  onSearchSubmit,
   sortBy,
   onSortChange,
   viewMode,
   onViewModeChange,
-  selectedTypes,
-  onTypeRemove,
-  onClearAll,
+  locationFilter,
+  onLocationFilterChange,
   isMobile = false,
   onOpenFilters,
   activeFilterCount = 0,
 }: VenueSearchBarProps) => {
+  const { data: locationsData } = useLocations();
+  const countries = locationsData?.countries ?? [];
+
+  const selectedCountry = useMemo(
+    () => countries.find((c) => c.id === locationFilter.countryId),
+    [countries, locationFilter.countryId],
+  );
+
+  const districts = selectedCountry?.districts ?? [];
+
+  const selectedDistrict = useMemo(
+    () => districts.find((d) => d.id === locationFilter.districtId),
+    [districts, locationFilter.districtId],
+  );
+
+  const municipalities = selectedDistrict?.municipalities ?? [];
+
   return (
     <Paper
       elevation={0}
@@ -69,9 +92,14 @@ export const VenueSearchBar = ({
         <TextField
           fullWidth
           size="small"
-          placeholder="Search venue by name..."
+          placeholder="Search venue by name... (press Enter)"
           value={searchValue}
           onChange={(e) => onSearchChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              onSearchSubmit();
+            }
+          }}
           slotProps={{
             input: {
               startAdornment: (
@@ -90,6 +118,94 @@ export const VenueSearchBar = ({
           }}
         />
 
+        {/* Location: Country */}
+        <FormControl size="small" sx={{ minWidth: 140 }}>
+          <InputLabel>Country</InputLabel>
+          <Select
+            value={locationFilter.countryId ?? ""}
+            label="Country"
+            onChange={(e) => {
+              const val = e.target.value as number | "";
+              onLocationFilterChange({
+                countryId: val === "" ? undefined : val,
+                districtId: undefined,
+                municipalityId: undefined,
+              });
+            }}
+            sx={{ borderRadius: 2 }}
+          >
+            <MenuItem value="">
+              <em>All</em>
+            </MenuItem>
+            {countries.map((country) => (
+              <MenuItem key={country.id} value={country.id}>
+                {country.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        {/* Location: District */}
+        <FormControl
+          size="small"
+          sx={{ minWidth: 140 }}
+          disabled={!locationFilter.countryId}
+        >
+          <InputLabel>District</InputLabel>
+          <Select
+            value={locationFilter.districtId ?? ""}
+            label="District"
+            onChange={(e) => {
+              const val = e.target.value as number | "";
+              onLocationFilterChange({
+                ...locationFilter,
+                districtId: val === "" ? undefined : val,
+                municipalityId: undefined,
+              });
+            }}
+            sx={{ borderRadius: 2 }}
+          >
+            <MenuItem value="">
+              <em>All</em>
+            </MenuItem>
+            {districts.map((district) => (
+              <MenuItem key={district.id} value={district.id}>
+                {district.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        {/* Location: Municipality */}
+        <FormControl
+          size="small"
+          sx={{ minWidth: 150 }}
+          disabled={!locationFilter.districtId}
+        >
+          <InputLabel>Municipality</InputLabel>
+          <Select
+            value={locationFilter.municipalityId ?? ""}
+            label="Municipality"
+            onChange={(e) => {
+              const val = e.target.value as number | "";
+              onLocationFilterChange({
+                ...locationFilter,
+                municipalityId: val === "" ? undefined : val,
+              });
+            }}
+            sx={{ borderRadius: 2 }}
+          >
+            <MenuItem value="">
+              <em>All</em>
+            </MenuItem>
+            {municipalities.map((municipality) => (
+              <MenuItem key={municipality.id} value={municipality.id}>
+                {municipality.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
         {/* Sort */}
         <FormControl size="small" sx={{ minWidth: 155 }}>
           <InputLabel>Sort By</InputLabel>
@@ -99,7 +215,6 @@ export const VenueSearchBar = ({
             onChange={(e) => onSortChange(e.target.value)}
             sx={{ borderRadius: 2 }}
           >
-            <MenuItem value="rating">Top Rated</MenuItem>
             <MenuItem value="price-low">Price: Low to High</MenuItem>
             <MenuItem value="price-high">Price: High to Low</MenuItem>
             <MenuItem value="capacity">Capacity</MenuItem>
@@ -155,67 +270,6 @@ export const VenueSearchBar = ({
           </Button>
         )}
       </Box>
-
-      {/* Active filter chips */}
-      {selectedTypes.length > 0 && (
-        <Box
-          sx={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 0.8,
-            mt: 1.5,
-            pt: 1.5,
-            borderTop: "1px solid",
-            borderColor: "rgba(61,47,37,0.06)",
-            alignItems: "center",
-          }}
-        >
-          <Typography
-            variant="caption"
-            sx={{ color: "text.secondary", mr: 0.5, fontSize: "0.78rem" }}
-          >
-            Active:
-          </Typography>
-          {selectedTypes.map((type) => (
-            <Chip
-              key={type}
-              label={type}
-              size="small"
-              onDelete={() => onTypeRemove(type)}
-              sx={{
-                bgcolor: "rgba(196,114,78,0.1)",
-                color: "secondary.dark",
-                fontWeight: 600,
-                fontSize: "0.75rem",
-                height: 26,
-                "& .MuiChip-deleteIcon": {
-                  color: "secondary.main",
-                  fontSize: 16,
-                },
-              }}
-            />
-          ))}
-          <Button
-            size="small"
-            onClick={onClearAll}
-            sx={{
-              color: "secondary.main",
-              textTransform: "none",
-              fontWeight: 600,
-              fontSize: "0.75rem",
-              p: 0,
-              ml: 0.5,
-              minWidth: 0,
-              "&:hover": {
-                bgcolor: "transparent",
-                textDecoration: "underline",
-              },
-            }}
-          >
-            Clear all
-          </Button>
-        </Box>
-      )}
     </Paper>
   );
 };

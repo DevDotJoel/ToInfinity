@@ -10,3 +10,13 @@ export interface Venue {
   pricePerPerson: number;
   mainImageUrl: string;
 }
+
+export interface SearchVenuesParams {
+  searchTerm?: string;
+  countryId?: number;
+  districtId?: number;
+  municipalityId?: number;
+  sortBy?: string;
+  page?: number;
+  size?: number;
+}

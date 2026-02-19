@@ -64,7 +64,7 @@ export const VenueFiltersSidebar = ({
   onClose,
 }: VenueFiltersSidebarProps) => {
   const activeFilterCount = selectedTypes.length;
-  const typeOpen = true; // Could be stateful if you want collapsible
+  const typeOpen = true;
 
   return (
     <Box sx={{ p: 2.5 }}>
@@ -120,11 +120,7 @@ export const VenueFiltersSidebar = ({
       <Divider sx={{ mb: 1.5 }} />
 
       {/* Venue Type */}
-      <SectionHeader
-        label="Venue Type"
-        open={typeOpen}
-        onToggle={() => {}} // No-op for now, could make collapsible
-      />
+      <SectionHeader label="Venue Type" open={typeOpen} onToggle={() => {}} />
       <Collapse in={typeOpen}>
         <FormGroup sx={{ pl: 0.5, pb: 1.5 }}>
           {venueTypes

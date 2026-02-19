@@ -1,5 +1,5 @@
 // Export types
-export type { Venue } from './types';
+export type { Venue, SearchVenuesParams } from './types';
 
 // Export schemas
 export { createVenueSchema } from './schemas/create-venue.schema';
@@ -12,6 +12,7 @@ export {
   useVenues,
   useMyVenues,
   useVenue,
+  useSearchVenues,
   useCreateVenue,
   useUpdateVenue,
   useDeleteVenue,
