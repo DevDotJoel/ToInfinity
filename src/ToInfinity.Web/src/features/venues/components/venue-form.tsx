@@ -9,20 +9,23 @@ import {
   Typography,
   Stack,
 } from "@mui/material";
-import type { CreateVenueRequest, Venue } from "../types";
+import type { Venue } from "../types";
 
 const venueSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
   description: z.string().min(1, "Description is required").max(500),
-  location: z.string().min(1, "Location is required").max(200),
+  street: z.string().min(1, "Street is required").max(200),
+  city: z.string().min(1, "City is required").max(200),
   capacity: z.number().min(1, "Capacity must be at least 1"),
-  pricePerDay: z.number().min(0, "Price must be positive"),
-  imageUrl: z.string().url("Invalid URL").optional().or(z.literal("")),
+  minPrice: z.number().min(0, "Min price must be positive"),
+  maxPrice: z.number().min(0, "Max price must be positive"),
 });
+
+type VenueFormData = z.infer<typeof venueSchema>;
 
 interface VenueFormProps {
   venue?: Venue;
-  onSubmit: (data: CreateVenueRequest) => void;
+  onSubmit: (data: VenueFormData) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -37,16 +40,17 @@ const VenueForm = ({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<CreateVenueRequest>({
+  } = useForm<VenueFormData>({
     resolver: zodResolver(venueSchema),
     defaultValues: venue
       ? {
           name: venue.name,
           description: venue.description,
-          location: venue.location,
+          street: venue.street,
+          city: venue.city,
           capacity: venue.capacity,
-          pricePerDay: venue.pricePerDay,
-          imageUrl: venue.imageUrl || "",
+          minPrice: venue.minPrice,
+          maxPrice: venue.maxPrice,
         }
       : undefined,
   });
@@ -77,17 +81,25 @@ const VenueForm = ({
             disabled={isLoading}
           />
           <TextField
-            {...register("location")}
-            label="Location"
+            {...register("city")}
+            label="City"
             fullWidth
-            error={!!errors.location}
-            helperText={errors.location?.message}
+            error={!!errors.city}
+            helperText={errors.city?.message}
+            disabled={isLoading}
+          />
+          <TextField
+            {...register("street")}
+            label="Street"
+            fullWidth
+            error={!!errors.street}
+            helperText={errors.street?.message}
             disabled={isLoading}
           />
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr 1fr" },
               gap: 2,
             }}
           >
@@ -101,23 +113,24 @@ const VenueForm = ({
               disabled={isLoading}
             />
             <TextField
-              {...register("pricePerDay", { valueAsNumber: true })}
-              label="Price Per Day"
+              {...register("minPrice", { valueAsNumber: true })}
+              label="Min Price"
               type="number"
               fullWidth
-              error={!!errors.pricePerDay}
-              helperText={errors.pricePerDay?.message}
+              error={!!errors.minPrice}
+              helperText={errors.minPrice?.message}
+              disabled={isLoading}
+            />
+            <TextField
+              {...register("maxPrice", { valueAsNumber: true })}
+              label="Max Price"
+              type="number"
+              fullWidth
+              error={!!errors.maxPrice}
+              helperText={errors.maxPrice?.message}
               disabled={isLoading}
             />
           </Box>
-          <TextField
-            {...register("imageUrl")}
-            label="Image URL (optional)"
-            fullWidth
-            error={!!errors.imageUrl}
-            helperText={errors.imageUrl?.message}
-            disabled={isLoading}
-          />
           <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
             <Button onClick={onCancel} disabled={isLoading}>
               Cancel

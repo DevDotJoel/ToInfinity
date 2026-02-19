@@ -21,6 +21,11 @@ const { DashboardRoutes } = lazyImport(
   "DashboardRoutes",
 );
 
+const { MyVenuesRoutes } = lazyImport(
+  () => import("../features/venues"),
+  "MyVenuesRoutes",
+);
+
 export const protectedRoutes = [
   {
     path: "/app",
@@ -29,6 +34,10 @@ export const protectedRoutes = [
       {
         path: "dashboard/*",
         element: <DashboardRoutes />,
+      },
+      {
+        path: "venues/*",
+        element: <MyVenuesRoutes />,
       },
       {
         path: "quotes/*",

@@ -18,10 +18,10 @@ interface VenueCardProps {
 const VenueCard = ({ venue, onEdit, onDelete }: VenueCardProps) => {
   return (
     <Card>
-      {venue.imageUrl && (
+      {venue.mainImageUrl && (
         <Box
           component="img"
-          src={venue.imageUrl}
+          src={venue.mainImageUrl}
           alt={venue.name}
           sx={{ width: "100%", height: 200, objectFit: "cover" }}
         />
@@ -36,7 +36,7 @@ const VenueCard = ({ venue, onEdit, onDelete }: VenueCardProps) => {
         <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
           <LocationOn sx={{ mr: 1, color: "text.secondary" }} />
           <Typography variant="body2" color="text.secondary">
-            {venue.location}
+            {venue.city}
           </Typography>
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
@@ -46,7 +46,7 @@ const VenueCard = ({ venue, onEdit, onDelete }: VenueCardProps) => {
           </Typography>
         </Box>
         <Typography variant="h6" color="primary" sx={{ mt: 2 }}>
-          ${venue.pricePerDay}/day
+          {venue.minPrice}€ - {venue.maxPrice}€
         </Typography>
       </CardContent>
       <CardActions>

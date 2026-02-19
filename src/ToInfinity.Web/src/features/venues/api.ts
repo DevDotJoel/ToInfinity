@@ -1,26 +1,35 @@
-import apiClient from '../../libs/api-client';
-import type { Venue, CreateVenueRequest, UpdateVenueRequest } from './types';
+import { api } from "../../libs/api-client";
+import type { Venue } from "./types";
+import type { CreateVenueFormData } from "./schemas/create-venue.schema";
 
 export const getVenues = async (): Promise<Venue[]> => {
-  const response = await apiClient.get<Venue[]>('/venues');
-  return response.data;
+  return api.get("/venues");
+};
+
+export const getMyVenues = async (): Promise<Venue[]> => {
+  return api.get("/venues/mine");
 };
 
 export const getVenue = async (id: string): Promise<Venue> => {
-  const response = await apiClient.get<Venue>(`/venues/${id}`);
-  return response.data;
+  return api.get(`/venues/${id}`);
 };
 
-export const createVenue = async (data: CreateVenueRequest): Promise<Venue> => {
-  const response = await apiClient.post<Venue>('/venues', data);
-  return response.data;
-};
+export const createVenue = async (data: CreateVenueFormData): Promise<void> => {
+  const formData = new FormData();
+  formData.append("name", data.name);
+  formData.append("description", data.description);
+  formData.append("street", data.street);
+  formData.append("city", data.city);
+  formData.append("capacity", data.capacity.toString());
+  formData.append("minPrice", data.minPrice.toString());
+  formData.append("maxPrice", data.maxPrice.toString());
+  formData.append("mainImage", data.mainImage);
 
-export const updateVenue = async (id: string, data: UpdateVenueRequest): Promise<Venue> => {
-  const response = await apiClient.put<Venue>(`/venues/${id}`, data);
-  return response.data;
+  return api.post("/venues", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
 };
 
 export const deleteVenue = async (id: string): Promise<void> => {
-  await apiClient.delete(`/venues/${id}`);
+  return api.delete(`/venues/${id}`);
 };

@@ -1,29 +1,12 @@
 export interface Venue {
   id: string;
+  userId: string;
   name: string;
   description: string;
-  location: string;
+  street: string;
+  city: string;
   capacity: number;
-  pricePerDay: number;
-  imageUrl?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateVenueRequest {
-  name: string;
-  description: string;
-  location: string;
-  capacity: number;
-  pricePerDay: number;
-  imageUrl?: string;
-}
-
-export interface UpdateVenueRequest {
-  name?: string;
-  description?: string;
-  location?: string;
-  capacity?: number;
-  pricePerDay?: number;
-  imageUrl?: string;
+  minPrice: number;
+  maxPrice: number;
+  mainImageUrl: string;
 }

@@ -13,3 +13,17 @@ export const VenuesRoutes = () => {
     </Suspense>
   );
 };
+
+const MyVenuesPage = lazy(() => import("./pages/my-venues-page"));
+const CreateVenuePage = lazy(() => import("./pages/create-venue-page"));
+
+export const MyVenuesRoutes = () => {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <Routes>
+        <Route index element={<MyVenuesPage />} />
+        <Route path="create" element={<CreateVenuePage />} />
+      </Routes>
+    </Suspense>
+  );
+};

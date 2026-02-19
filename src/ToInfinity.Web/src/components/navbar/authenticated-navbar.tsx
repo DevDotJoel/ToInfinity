@@ -25,6 +25,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import StoreIcon from "@mui/icons-material/Store";
 import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { mockQuoteRequests } from "../../lib/data";
@@ -68,6 +69,11 @@ const AuthenticatedNavbar = () => {
       label: "Dashboard",
       icon: <DashboardIcon sx={{ fontSize: 20 }} />,
       href: "/app/dashboard",
+    },
+    {
+      label: "My Venues",
+      icon: <StoreIcon sx={{ fontSize: 20 }} />,
+      href: "/app/venues",
     },
     {
       label: "My Quotes",

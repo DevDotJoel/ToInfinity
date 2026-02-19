@@ -1,12 +1,16 @@
 // Export types
-export type { Venue, CreateVenueRequest, UpdateVenueRequest } from './types';
+export type { Venue } from './types';
+
+// Export schemas
+export { createVenueSchema } from './schemas/create-venue.schema';
+export type { CreateVenueFormData } from './schemas/create-venue.schema';
 
 // Export hooks
 export {
   useVenues,
+  useMyVenues,
   useVenue,
   useCreateVenue,
-  useUpdateVenue,
   useDeleteVenue,
 } from './hooks';
 
@@ -14,9 +18,12 @@ export {
 export { default as VenueCard } from './components/venue-card';
 export { default as VenuesList } from './components/venues-list';
 export { default as VenueForm } from './components/venue-form';
+export { CreateVenueForm } from './components/create-venue-form';
+export { MyVenueCard } from './components/my-venue-card';
+export { VenueImageUpload } from './components/venue-image-upload';
 
 // Export pages
-export { VenuesPage } from './pages';
+export { VenuesPage, MyVenuesPage, CreateVenuePage } from './pages';
 
 // Export routes
-export { VenuesRoutes } from './routes';
+export { VenuesRoutes, MyVenuesRoutes } from './routes';

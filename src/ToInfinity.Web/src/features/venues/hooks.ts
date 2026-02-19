@@ -1,13 +1,22 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import * as venuesApi from './api';
-import type { CreateVenueRequest, UpdateVenueRequest } from './types';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import * as venuesApi from "./api";
+import type { CreateVenueFormData } from "./schemas/create-venue.schema";
+import type { MutationConfig } from "../../libs/react-query";
 
-const VENUES_QUERY_KEY = 'venues';
+const VENUES_QUERY_KEY = "venues";
+const MY_VENUES_QUERY_KEY = "my-venues";
 
 export const useVenues = () => {
   return useQuery({
     queryKey: [VENUES_QUERY_KEY],
     queryFn: venuesApi.getVenues,
+  });
+};
+
+export const useMyVenues = () => {
+  return useQuery({
+    queryKey: [MY_VENUES_QUERY_KEY],
+    queryFn: venuesApi.getMyVenues,
   });
 };
 
@@ -19,26 +28,19 @@ export const useVenue = (id: string) => {
   });
 };
 
-export const useCreateVenue = () => {
+export const useCreateVenue = (
+  config?: MutationConfig<typeof venuesApi.createVenue>
+) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateVenueRequest) => venuesApi.createVenue(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [VENUES_QUERY_KEY] });
+    mutationFn: (data: CreateVenueFormData) => venuesApi.createVenue(data),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: [MY_VENUES_QUERY_KEY] });
+      config?.onSuccess?.(data);
     },
-  });
-};
-
-export const useUpdateVenue = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateVenueRequest }) =>
-      venuesApi.updateVenue(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [VENUES_QUERY_KEY] });
-    },
+    onError: config?.onError,
+    onSettled: config?.onSettled,
   });
 };
 
@@ -48,7 +50,7 @@ export const useDeleteVenue = () => {
   return useMutation({
     mutationFn: (id: string) => venuesApi.deleteVenue(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [VENUES_QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [MY_VENUES_QUERY_KEY] });
     },
   });
 };
