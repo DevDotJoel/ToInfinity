@@ -18,6 +18,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
 
     public DbSet<WeddingVenue> WeddingVenues => Set<WeddingVenue>();
     public DbSet<Subscription> Subscriptions => Set<Subscription>();
+    public DbSet<Country> Countries => Set<Country>();
+    public DbSet<District> Districts => Set<District>();
+    public DbSet<Municipality> Municipalities => Set<Municipality>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -27,21 +27,21 @@ public class CreateWeddingVenueOnboardingCommandValidator
             .NotEmpty()
             .WithMessage("Street is required.");
 
-        RuleFor(x => x.City)
+        RuleFor(x => x.PostalCode)
             .NotEmpty()
-            .WithMessage("City is required.");
+            .WithMessage("Postal code is required.");
+
+        RuleFor(x => x.MunicipalityId)
+            .NotEmpty()
+            .WithMessage("Municipality is required.");
 
         RuleFor(x => x.Capacity)
             .GreaterThan(0)
             .WithMessage("Capacity must be greater than 0.");
 
-        RuleFor(x => x.MinPrice)
+        RuleFor(x => x.PricePerPerson)
             .GreaterThanOrEqualTo(0)
-            .WithMessage("Minimum price must be greater than or equal to 0.");
-
-        RuleFor(x => x.MaxPrice)
-            .GreaterThanOrEqualTo(x => x.MinPrice)
-            .WithMessage("Maximum price must be greater than or equal to minimum price.");
+            .WithMessage("Price per person must be greater than or equal to 0.");
 
         RuleFor(x => x.MainImageUrl)
             .NotEmpty()

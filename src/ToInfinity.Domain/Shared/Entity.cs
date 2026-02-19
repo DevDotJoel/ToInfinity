@@ -1,7 +1,7 @@
 namespace ToInfinity.Domain.Shared;
 
 public abstract class Entity<TId> : AuditableEntity, IEquatable<Entity<TId>>
-    where TId : EntityId<Guid>
+    where TId : ValueObject
 {
     public TId Id { get; private set; }
 

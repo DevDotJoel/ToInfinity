@@ -2,9 +2,13 @@ using ToInfinity.Domain.Shared;
 
 namespace ToInfinity.Domain.ValueObjects;
 
-public sealed record GalleryImageId : EntityId<Guid>
+public sealed class GalleryImageId : EntityId<Guid>
 {
     private GalleryImageId(Guid value) : base(value)
+    {
+    }
+
+    private GalleryImageId()
     {
     }
 

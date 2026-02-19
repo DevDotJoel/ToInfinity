@@ -2,9 +2,13 @@ using ToInfinity.Domain.Shared;
 
 namespace ToInfinity.Domain.ValueObjects;
 
-public sealed record UserId : EntityId<Guid>
+public sealed class UserId : EntityId<Guid>
 {
     private UserId(Guid value) : base(value)
+    {
+    }
+
+    private UserId()
     {
     }
 

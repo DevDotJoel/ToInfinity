@@ -1,6 +1,6 @@
 namespace ToInfinity.Domain.Shared;
 
-public abstract record EntityId<T>
+public abstract class EntityId<T> : ValueObject
     where T : notnull
 {
     public T Value { get; }
@@ -9,4 +9,16 @@ public abstract record EntityId<T>
     {
         Value = value;
     }
+
+    protected EntityId()
+    {
+        Value = default!;
+    }
+
+    protected override IEnumerable<object> GetEqualityComponents()
+    {
+        yield return Value;
+    }
+
+    public override string? ToString() => Value?.ToString();
 }

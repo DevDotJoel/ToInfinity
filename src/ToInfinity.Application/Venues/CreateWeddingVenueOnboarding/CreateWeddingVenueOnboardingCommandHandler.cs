@@ -46,25 +46,15 @@ public class CreateWeddingVenueOnboardingCommandHandler
                 description: "An active subscription is required to create a venue.");
         }
 
-        var addressResult = Address.Create(command.Street, command.City);
-        if (addressResult.IsError)
-        {
-            return addressResult.Errors;
-        }
-
-        var priceRangeResult = PriceRange.Create(command.MinPrice, command.MaxPrice);
-        if (priceRangeResult.IsError)
-        {
-            return priceRangeResult.Errors;
-        }
-
         var venueResult = WeddingVenue.Create(
             userId,
             command.Name,
             command.Description,
-            addressResult.Value,
+            command.Street,
+            command.PostalCode,
+            MunicipalityId.Create(command.MunicipalityId),
             command.Capacity,
-            priceRangeResult.Value,
+            command.PricePerPerson,
             command.MainImageUrl);
 
         if (venueResult.IsError)

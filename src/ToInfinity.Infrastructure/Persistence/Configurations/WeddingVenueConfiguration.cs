@@ -39,6 +39,25 @@ public class WeddingVenueConfiguration : IEntityTypeConfiguration<WeddingVenue>
             .IsRequired()
             .HasMaxLength(2000);
 
+        builder.Property(v => v.Street)
+            .IsRequired()
+            .HasMaxLength(200);
+
+        builder.Property(v => v.PostalCode)
+            .IsRequired()
+            .HasMaxLength(20);
+
+        builder.Property(v => v.MunicipalityId)
+            .HasConversion(
+                id => id.Value,
+                value => MunicipalityId.Create(value))
+            .IsRequired();
+
+        builder.HasOne<Municipality>()
+            .WithMany()
+            .HasForeignKey(v => v.MunicipalityId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.Property(v => v.Capacity)
             .IsRequired();
 
@@ -52,31 +71,9 @@ public class WeddingVenueConfiguration : IEntityTypeConfiguration<WeddingVenue>
         builder.Property(v => v.UpdatedAt)
             .IsRequired();
 
-        builder.OwnsOne(v => v.Address, address =>
-        {
-            address.Property(a => a.Street)
-                .IsRequired()
-                .HasMaxLength(200)
-                .HasColumnName("Address_Street");
-
-            address.Property(a => a.City)
-                .IsRequired()
-                .HasMaxLength(100)
-                .HasColumnName("Address_City");
-        });
-
-        builder.OwnsOne(v => v.PriceRange, priceRange =>
-        {
-            priceRange.Property(p => p.Min)
-                .IsRequired()
-                .HasColumnType("decimal(18,2)")
-                .HasColumnName("PriceRange_Min");
-
-            priceRange.Property(p => p.Max)
-                .IsRequired()
-                .HasColumnType("decimal(18,2)")
-                .HasColumnName("PriceRange_Max");
-        });
+        builder.Property(v => v.PricePerPerson)
+            .IsRequired()
+            .HasColumnType("decimal(18,2)");
     }
 
     private void ConfigureWeddingGalleryImagesTable(EntityTypeBuilder<WeddingVenue> builder)

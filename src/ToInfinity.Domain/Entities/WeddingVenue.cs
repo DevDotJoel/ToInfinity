@@ -13,9 +13,11 @@ public sealed class WeddingVenue : Entity<VenueId>, IBaseUser
     public UserId UserId { get; private set; }
     public string Name { get; private set; }
     public string Description { get; private set; }
-    public Address Address { get; private set; }
+    public string Street { get; private set; }
+    public string PostalCode { get; private set; }
+    public MunicipalityId MunicipalityId { get; private set; }
     public int Capacity { get; private set; }
-    public PriceRange PriceRange { get; private set; }
+    public decimal PricePerPerson { get; private set; }
     public string MainImageUrl { get; private set; }
     public IReadOnlyList<WeddingGalleryImage> Gallery => _gallery.AsReadOnly();
 
@@ -24,31 +26,43 @@ public sealed class WeddingVenue : Entity<VenueId>, IBaseUser
         UserId userId,
         string name,
         string description,
-        Address address,
+        string street,
+        string postalCode,
+        MunicipalityId municipalityId,
         int capacity,
-        PriceRange priceRange,
+        decimal pricePerPerson,
         string mainImageUrl) : base(id)
     {
         UserId = userId;
         Name = name;
         Description = description;
-        Address = address;
+        Street = street;
+        PostalCode = postalCode;
+        MunicipalityId = municipalityId;
         Capacity = capacity;
-        PriceRange = priceRange;
+        PricePerPerson = pricePerPerson;
         MainImageUrl = mainImageUrl;
     }
     private WeddingVenue()
     {
-
+        UserId = default!;
+        Name = default!;
+        Description = default!;
+        Street = default!;
+        PostalCode = default!;
+        MunicipalityId = default!;
+        MainImageUrl = default!;
     }
 
     public static ErrorOr<WeddingVenue> Create(
         UserId userId,
         string name,
         string description,
-        Address address,
+        string street,
+        string postalCode,
+        MunicipalityId municipalityId,
         int capacity,
-        PriceRange priceRange,
+        decimal pricePerPerson,
         string mainImageUrl)
     {
         if (userId is null)
@@ -72,11 +86,25 @@ public sealed class WeddingVenue : Entity<VenueId>, IBaseUser
                 description: "Description cannot be empty.");
         }
 
-        if (address is null)
+        if (string.IsNullOrWhiteSpace(street))
         {
             return Error.Validation(
-                code: "WeddingVenue.Address",
-                description: "Address cannot be null.");
+                code: "WeddingVenue.Street",
+                description: "Street cannot be empty.");
+        }
+
+        if (string.IsNullOrWhiteSpace(postalCode))
+        {
+            return Error.Validation(
+                code: "WeddingVenue.PostalCode",
+                description: "PostalCode cannot be empty.");
+        }
+
+        if (municipalityId is null)
+        {
+            return Error.Validation(
+                code: "WeddingVenue.MunicipalityId",
+                description: "MunicipalityId cannot be null.");
         }
 
         if (capacity <= 0)
@@ -86,11 +114,11 @@ public sealed class WeddingVenue : Entity<VenueId>, IBaseUser
                 description: "Capacity must be greater than 0.");
         }
 
-        if (priceRange is null)
+        if (pricePerPerson < 0)
         {
             return Error.Validation(
-                code: "WeddingVenue.PriceRange",
-                description: "PriceRange cannot be null.");
+                code: "WeddingVenue.PricePerPerson",
+                description: "PricePerPerson must be greater than or equal to 0.");
         }
 
         if (string.IsNullOrWhiteSpace(mainImageUrl))
@@ -105,9 +133,11 @@ public sealed class WeddingVenue : Entity<VenueId>, IBaseUser
             userId,
             name,
             description,
-            address,
+            street,
+            postalCode,
+            municipalityId,
             capacity,
-            priceRange,
+            pricePerPerson,
             mainImageUrl);
 
         // Raise domain event
@@ -157,16 +187,42 @@ public sealed class WeddingVenue : Entity<VenueId>, IBaseUser
         return Result.Success;
     }
 
-    public ErrorOr<Success> SetAddress(Address address)
+    public ErrorOr<Success> SetStreet(string street)
     {
-        if (address is null)
+        if (string.IsNullOrWhiteSpace(street))
         {
             return Error.Validation(
-                code: "WeddingVenue.Address",
-                description: "Address cannot be null.");
+                code: "WeddingVenue.Street",
+                description: "Street cannot be empty.");
         }
 
-        Address = address;
+        Street = street;
+        return Result.Success;
+    }
+
+    public ErrorOr<Success> SetPostalCode(string postalCode)
+    {
+        if (string.IsNullOrWhiteSpace(postalCode))
+        {
+            return Error.Validation(
+                code: "WeddingVenue.PostalCode",
+                description: "PostalCode cannot be empty.");
+        }
+
+        PostalCode = postalCode;
+        return Result.Success;
+    }
+
+    public ErrorOr<Success> SetMunicipalityId(MunicipalityId municipalityId)
+    {
+        if (municipalityId is null)
+        {
+            return Error.Validation(
+                code: "WeddingVenue.MunicipalityId",
+                description: "MunicipalityId cannot be null.");
+        }
+
+        MunicipalityId = municipalityId;
         return Result.Success;
     }
 
@@ -183,16 +239,16 @@ public sealed class WeddingVenue : Entity<VenueId>, IBaseUser
         return Result.Success;
     }
 
-    public ErrorOr<Success> SetPriceRange(PriceRange priceRange)
+    public ErrorOr<Success> SetPricePerPerson(decimal pricePerPerson)
     {
-        if (priceRange is null)
+        if (pricePerPerson < 0)
         {
             return Error.Validation(
-                code: "WeddingVenue.PriceRange",
-                description: "PriceRange cannot be null.");
+                code: "WeddingVenue.PricePerPerson",
+                description: "PricePerPerson must be greater than or equal to 0.");
         }
 
-        PriceRange = priceRange;
+        PricePerPerson = pricePerPerson;
         return Result.Success;
     }
 

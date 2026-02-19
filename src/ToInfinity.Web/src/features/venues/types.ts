@@ -4,9 +4,9 @@ export interface Venue {
   name: string;
   description: string;
   street: string;
-  city: string;
+  postalCode: string;
+  municipalityId: string;
   capacity: number;
-  minPrice: number;
-  maxPrice: number;
+  pricePerPerson: number;
   mainImageUrl: string;
 }

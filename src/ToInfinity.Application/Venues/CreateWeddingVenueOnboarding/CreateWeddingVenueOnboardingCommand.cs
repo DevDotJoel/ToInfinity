@@ -10,8 +10,8 @@ public record CreateWeddingVenueOnboardingCommand(
     string Name,
     string Description,
     string Street,
-    string City,
+    string PostalCode,
+    int MunicipalityId,
     int Capacity,
-    decimal MinPrice,
-    decimal MaxPrice,
+    decimal PricePerPerson,
     string MainImageUrl) : IRequest<ErrorOr<VenueDto>>;

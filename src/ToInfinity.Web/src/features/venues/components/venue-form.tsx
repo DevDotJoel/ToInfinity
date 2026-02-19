@@ -15,10 +15,10 @@ const venueSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
   description: z.string().min(1, "Description is required").max(500),
   street: z.string().min(1, "Street is required").max(200),
-  city: z.string().min(1, "City is required").max(200),
+  postalCode: z.string().min(1, "Postal code is required").max(20),
+  municipalityId: z.string().min(1, "Municipality is required"),
   capacity: z.number().min(1, "Capacity must be at least 1"),
-  minPrice: z.number().min(0, "Min price must be positive"),
-  maxPrice: z.number().min(0, "Max price must be positive"),
+  pricePerPerson: z.number().min(0, "Price per person must be positive"),
 });
 
 type VenueFormData = z.infer<typeof venueSchema>;
@@ -47,10 +47,10 @@ const VenueForm = ({
           name: venue.name,
           description: venue.description,
           street: venue.street,
-          city: venue.city,
+          postalCode: venue.postalCode,
+          municipalityId: venue.municipalityId,
           capacity: venue.capacity,
-          minPrice: venue.minPrice,
-          maxPrice: venue.maxPrice,
+          pricePerPerson: venue.pricePerPerson,
         }
       : undefined,
   });
@@ -81,14 +81,6 @@ const VenueForm = ({
             disabled={isLoading}
           />
           <TextField
-            {...register("city")}
-            label="City"
-            fullWidth
-            error={!!errors.city}
-            helperText={errors.city?.message}
-            disabled={isLoading}
-          />
-          <TextField
             {...register("street")}
             label="Street"
             fullWidth
@@ -99,7 +91,31 @@ const VenueForm = ({
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr 1fr" },
+              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+              gap: 2,
+            }}
+          >
+            <TextField
+              {...register("postalCode")}
+              label="Postal Code"
+              fullWidth
+              error={!!errors.postalCode}
+              helperText={errors.postalCode?.message}
+              disabled={isLoading}
+            />
+            <TextField
+              {...register("municipalityId")}
+              label="Municipality"
+              fullWidth
+              error={!!errors.municipalityId}
+              helperText={errors.municipalityId?.message}
+              disabled={isLoading}
+            />
+          </Box>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
               gap: 2,
             }}
           >
@@ -113,21 +129,12 @@ const VenueForm = ({
               disabled={isLoading}
             />
             <TextField
-              {...register("minPrice", { valueAsNumber: true })}
-              label="Min Price"
+              {...register("pricePerPerson", { valueAsNumber: true })}
+              label="Price Per Person"
               type="number"
               fullWidth
-              error={!!errors.minPrice}
-              helperText={errors.minPrice?.message}
-              disabled={isLoading}
-            />
-            <TextField
-              {...register("maxPrice", { valueAsNumber: true })}
-              label="Max Price"
-              type="number"
-              fullWidth
-              error={!!errors.maxPrice}
-              helperText={errors.maxPrice?.message}
+              error={!!errors.pricePerPerson}
+              helperText={errors.pricePerPerson?.message}
               disabled={isLoading}
             />
           </Box>

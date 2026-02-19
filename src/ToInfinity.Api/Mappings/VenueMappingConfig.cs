@@ -16,10 +16,10 @@ public class VenueMappingConfig : IRegister
             .Map(dest => dest.Name, src => src.Request.Name)
             .Map(dest => dest.Description, src => src.Request.Description)
             .Map(dest => dest.Street, src => src.Request.Street)
-            .Map(dest => dest.City, src => src.Request.City)
+            .Map(dest => dest.PostalCode, src => src.Request.PostalCode)
+            .Map(dest => dest.MunicipalityId, src => src.Request.MunicipalityId)
             .Map(dest => dest.Capacity, src => src.Request.Capacity)
-            .Map(dest => dest.MinPrice, src => src.Request.MinPrice)
-            .Map(dest => dest.MaxPrice, src => src.Request.MaxPrice)
+            .Map(dest => dest.PricePerPerson, src => src.Request.PricePerPerson)
             .Map(dest => dest.MainImageUrl, src => src.MainImageUrl);
 
         // Application Model → Response DTO

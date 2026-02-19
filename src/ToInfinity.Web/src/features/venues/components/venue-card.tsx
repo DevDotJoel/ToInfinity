@@ -36,7 +36,7 @@ const VenueCard = ({ venue, onEdit, onDelete }: VenueCardProps) => {
         <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
           <LocationOn sx={{ mr: 1, color: "text.secondary" }} />
           <Typography variant="body2" color="text.secondary">
-            {venue.city}
+            {venue.street}, {venue.postalCode}
           </Typography>
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
@@ -46,7 +46,7 @@ const VenueCard = ({ venue, onEdit, onDelete }: VenueCardProps) => {
           </Typography>
         </Box>
         <Typography variant="h6" color="primary" sx={{ mt: 2 }}>
-          {venue.minPrice}€ - {venue.maxPrice}€
+          {venue.pricePerPerson}€ / person
         </Typography>
       </CardContent>
       <CardActions>
