@@ -20,7 +20,7 @@ interface MyVenueCardProps {
 
 export const MyVenueCard = ({ venue }: MyVenueCardProps) => {
   return (
-    <Grid size={{ xs: 12, md: 6 }}>
+    <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
       <Card
         sx={{
           borderRadius: 3,
@@ -74,6 +74,8 @@ export const MyVenueCard = ({ venue }: MyVenueCardProps) => {
             <Tooltip title="Edit venue">
               <IconButton
                 size="small"
+                component={RouterLink}
+                to={`/app/venues/${venue.id}/edit`}
                 sx={{
                   bgcolor: "rgba(255,255,255,0.9)",
                   "&:hover": { bgcolor: "#fff" },
@@ -124,7 +126,7 @@ export const MyVenueCard = ({ venue }: MyVenueCardProps) => {
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.3 }}>
               <LocationOnIcon sx={{ fontSize: 15, color: "text.secondary" }} />
               <Typography sx={{ fontSize: "0.82rem", color: "text.secondary" }}>
-                {venue.city}
+                {venue.postalCode}
               </Typography>
             </Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.3 }}>
@@ -165,44 +167,11 @@ export const MyVenueCard = ({ venue }: MyVenueCardProps) => {
                     color: "secondary.main",
                   }}
                 >
-                  {venue.minPrice}
+                  {venue.pricePerPerson}
                 </Typography>
               </Box>
               <Typography sx={{ fontSize: "0.7rem", color: "text.secondary" }}>
-                Min Price
-              </Typography>
-            </Box>
-            <Box
-              sx={{
-                flex: 1,
-                textAlign: "center",
-                py: 1,
-                borderRadius: 2,
-                bgcolor: "rgba(92,107,192,0.06)",
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 0.5,
-                  mb: 0.3,
-                }}
-              >
-                <EuroIcon sx={{ fontSize: 16, color: "#5c6bc0" }} />
-                <Typography
-                  sx={{
-                    fontWeight: 800,
-                    fontSize: "1.1rem",
-                    color: "#5c6bc0",
-                  }}
-                >
-                  {venue.maxPrice}
-                </Typography>
-              </Box>
-              <Typography sx={{ fontSize: "0.7rem", color: "text.secondary" }}>
-                Max Price
+                Per Person
               </Typography>
             </Box>
             <Box

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
@@ -11,6 +11,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
 import Grid from "@mui/material/Grid";
 import Divider from "@mui/material/Divider";
+import MenuItem from "@mui/material/MenuItem";
 import EuroIcon from "@mui/icons-material/Euro";
 import PeopleIcon from "@mui/icons-material/People";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
@@ -20,6 +21,7 @@ import {
   type CreateVenueFormData,
 } from "../schemas/create-venue.schema";
 import { VenueImageUpload } from "./venue-image-upload";
+import { useLocations } from "../../locations";
 
 interface CreateVenueFormProps {
   onSubmit: (data: CreateVenueFormData) => void;
@@ -98,6 +100,10 @@ export const CreateVenueForm = ({
   serverError,
 }: CreateVenueFormProps) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedCountryId, setSelectedCountryId] = useState<number | "">("");
+  const [selectedDistrictId, setSelectedDistrictId] = useState<number | "">("");
+
+  const { data: locationsData, isLoading: isLoadingLocations } = useLocations();
 
   const {
     register,
@@ -112,17 +118,45 @@ export const CreateVenueForm = ({
       name: "",
       description: "",
       street: "",
-      city: "",
+      postalCode: "",
+      municipalityId: undefined,
       capacity: undefined,
-      minPrice: undefined,
-      maxPrice: undefined,
+      pricePerPerson: undefined,
       mainImage: undefined,
     },
   });
 
-  const minPrice = watch("minPrice");
-  const maxPrice = watch("maxPrice");
+  const pricePerPerson = watch("pricePerPerson");
   const capacity = watch("capacity");
+
+  const countries = locationsData?.countries ?? [];
+
+  const districts = useMemo(() => {
+    if (!selectedCountryId) return [];
+    return countries.find((c) => c.id === selectedCountryId)?.districts ?? [];
+  }, [countries, selectedCountryId]);
+
+  const municipalities = useMemo(() => {
+    if (!selectedDistrictId) return [];
+    return (
+      districts.find((d) => d.id === selectedDistrictId)?.municipalities ?? []
+    );
+  }, [districts, selectedDistrictId]);
+
+  const handleCountryChange = (countryId: number) => {
+    setSelectedCountryId(countryId);
+    setSelectedDistrictId("");
+    setValue("municipalityId", undefined as unknown as number, {
+      shouldValidate: false,
+    });
+  };
+
+  const handleDistrictChange = (districtId: number) => {
+    setSelectedDistrictId(districtId);
+    setValue("municipalityId", undefined as unknown as number, {
+      shouldValidate: false,
+    });
+  };
 
   const handleImageSelect = (file: File) => {
     setValue("mainImage", file, { shouldValidate: true });
@@ -215,15 +249,14 @@ export const CreateVenueForm = ({
       >
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
           <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12, sm: 4 }}>
               <TextField
-                {...register("city")}
+                select
                 fullWidth
-                label="City"
-                placeholder="e.g. Lisbon"
-                error={!!errors.city}
-                helperText={errors.city?.message}
-                disabled={isSubmitting}
+                label="Country"
+                value={selectedCountryId}
+                onChange={(e) => handleCountryChange(Number(e.target.value))}
+                disabled={isSubmitting || isLoadingLocations}
                 slotProps={{
                   input: {
                     startAdornment: (
@@ -236,14 +269,86 @@ export const CreateVenueForm = ({
                   },
                 }}
                 sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+              >
+                {countries.map((country) => (
+                  <MenuItem key={country.id} value={country.id}>
+                    {country.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <TextField
+                select
+                fullWidth
+                label="District"
+                value={selectedDistrictId}
+                onChange={(e) => handleDistrictChange(Number(e.target.value))}
+                disabled={isSubmitting || !selectedCountryId}
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LocationOnIcon
+                          sx={{ color: "text.secondary", fontSize: 18 }}
+                        />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+              >
+                {districts.map((district) => (
+                  <MenuItem key={district.id} value={district.id}>
+                    {district.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <Controller
+                name="municipalityId"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    select
+                    fullWidth
+                    label="Municipality"
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                    error={!!errors.municipalityId}
+                    helperText={errors.municipalityId?.message}
+                    disabled={isSubmitting || !selectedDistrictId}
+                    slotProps={{
+                      input: {
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <LocationOnIcon
+                              sx={{ color: "text.secondary", fontSize: 18 }}
+                            />
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
+                    sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                  >
+                    {municipalities.map((municipality) => (
+                      <MenuItem key={municipality.id} value={municipality.id}>
+                        {municipality.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                )}
               />
             </Grid>
+          </Grid>
+          <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 {...register("street")}
                 fullWidth
                 label="Street Address"
-                placeholder="e.g. Rua da Serra 45, 2710-512"
+                placeholder="e.g. Rua da Serra 45"
                 error={!!errors.street}
                 helperText={errors.street?.message}
                 disabled={isSubmitting}
@@ -261,6 +366,18 @@ export const CreateVenueForm = ({
                 sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
               />
             </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                {...register("postalCode")}
+                fullWidth
+                label="Postal Code"
+                placeholder="e.g. 2710-512"
+                error={!!errors.postalCode}
+                helperText={errors.postalCode?.message}
+                disabled={isSubmitting}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+              />
+            </Grid>
           </Grid>
         </Box>
       </SectionCard>
@@ -268,19 +385,19 @@ export const CreateVenueForm = ({
       {/* Step 4: Pricing & Capacity */}
       <SectionCard
         title="Pricing & Capacity"
-        subtitle="Set your pricing range and guest limits"
+        subtitle="Set your pricing and guest limits"
         stepNumber={4}
       >
         <Grid container spacing={2.5}>
-          <Grid size={{ xs: 12, sm: 4 }}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              {...register("minPrice", { valueAsNumber: true })}
+              {...register("pricePerPerson", { valueAsNumber: true })}
               fullWidth
-              label="Min price per person"
-              placeholder="e.g. 80"
+              label="Price per person"
+              placeholder="e.g. 120"
               type="number"
-              error={!!errors.minPrice}
-              helperText={errors.minPrice?.message}
+              error={!!errors.pricePerPerson}
+              helperText={errors.pricePerPerson?.message}
               disabled={isSubmitting}
               slotProps={{
                 input: {
@@ -296,31 +413,7 @@ export const CreateVenueForm = ({
               sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 4 }}>
-            <TextField
-              {...register("maxPrice", { valueAsNumber: true })}
-              fullWidth
-              label="Max price per person"
-              placeholder="e.g. 150"
-              type="number"
-              error={!!errors.maxPrice}
-              helperText={errors.maxPrice?.message}
-              disabled={isSubmitting}
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <EuroIcon
-                        sx={{ color: "text.secondary", fontSize: 18 }}
-                      />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 4 }}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               {...register("capacity", { valueAsNumber: true })}
               fullWidth
@@ -354,7 +447,7 @@ export const CreateVenueForm = ({
             />
           </Grid>
 
-          {minPrice > 0 && maxPrice > 0 && capacity > 0 && (
+          {pricePerPerson > 0 && capacity > 0 && (
             <Grid size={12}>
               <Box
                 sx={{
@@ -382,8 +475,7 @@ export const CreateVenueForm = ({
                     fontSize: "1.1rem",
                   }}
                 >
-                  {(minPrice * capacity).toLocaleString("pt-PT")}
-                  {"\u20AC"} - {(maxPrice * capacity).toLocaleString("pt-PT")}
+                  {(pricePerPerson * capacity).toLocaleString("pt-PT")}
                   {"\u20AC"}
                 </Typography>
               </Box>

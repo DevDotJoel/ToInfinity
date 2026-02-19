@@ -3,7 +3,7 @@ import { z } from "zod";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-export const createVenueSchema = z.object({
+export const editVenueSchema = z.object({
   name: z
     .string()
     .min(1, "Venue name is required")
@@ -26,7 +26,7 @@ export const createVenueSchema = z.object({
     .number({ error: "Price per person is required" })
     .min(0, "Price per person must be 0 or more"),
   mainImage: z
-    .instanceof(File, { message: "Please upload a main image" })
+    .instanceof(File)
     .refine(
       (file) => file.size <= MAX_FILE_SIZE,
       "Image must be less than 5MB"
@@ -34,7 +34,8 @@ export const createVenueSchema = z.object({
     .refine(
       (file) => ACCEPTED_IMAGE_TYPES.includes(file.type),
       "Only JPG, PNG, and WebP images are accepted"
-    ),
+    )
+    .optional(),
 });
 
-export type CreateVenueFormData = z.infer<typeof createVenueSchema>;
+export type EditVenueFormData = z.infer<typeof editVenueSchema>;

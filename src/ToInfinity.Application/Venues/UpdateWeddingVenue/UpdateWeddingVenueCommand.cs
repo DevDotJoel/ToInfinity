@@ -3,9 +3,10 @@ using MediatR;
 using ToInfinity.Application.Venues.Models;
 using ToInfinity.Domain.ValueObjects;
 
-namespace ToInfinity.Application.Venues.CreateWeddingVenueOnboarding;
+namespace ToInfinity.Application.Venues.UpdateWeddingVenue;
 
-public record CreateWeddingVenueOnboardingCommand(
+public record UpdateWeddingVenueCommand(
+    VenueId VenueId,
     UserId UserId,
     string Name,
     string Description,
@@ -14,6 +15,6 @@ public record CreateWeddingVenueOnboardingCommand(
     int MunicipalityId,
     int Capacity,
     decimal PricePerPerson,
-    byte[] ImageData,
-    string ImageFileName,
-    string ImageContentType) : IRequest<ErrorOr<VenueDto>>;
+    byte[]? ImageData,
+    string? ImageFileName,
+    string? ImageContentType) : IRequest<ErrorOr<VenueDto>>;

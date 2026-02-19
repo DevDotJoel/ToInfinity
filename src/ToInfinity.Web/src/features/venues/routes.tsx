@@ -16,6 +16,7 @@ export const VenuesRoutes = () => {
 
 const MyVenuesPage = lazy(() => import("./pages/my-venues-page"));
 const CreateVenuePage = lazy(() => import("./pages/create-venue-page"));
+const EditVenuePage = lazy(() => import("./pages/edit-venue-page"));
 
 export const MyVenuesRoutes = () => {
   return (
@@ -23,6 +24,7 @@ export const MyVenuesRoutes = () => {
       <Routes>
         <Route index element={<MyVenuesPage />} />
         <Route path="create" element={<CreateVenuePage />} />
+        <Route path=":id/edit" element={<EditVenuePage />} />
       </Routes>
     </Suspense>
   );

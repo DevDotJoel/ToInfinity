@@ -3,9 +3,13 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ToInfinity.Application.Common.Services;
-using ToInfinity.Application.Common.Storage;
 using ToInfinity.Application.Venues.CreateWeddingVenueOnboarding;
+using ToInfinity.Application.Venues.GetById;
+using ToInfinity.Application.Venues.GetByUser;
+using ToInfinity.Application.Venues.SearchVenues;
+using ToInfinity.Application.Venues.UpdateWeddingVenue;
 using ToInfinity.Contracts.Venues;
+using ToInfinity.Domain.ValueObjects;
 
 namespace ToInfinity.Api.Controllers;
 
@@ -16,18 +20,60 @@ public class VenuesController : ApiController
     private readonly IMediator _mediator;
     private readonly IMapper _mapper;
     private readonly IUserContext _userContext;
-    private readonly IFileStorageService _fileStorageService;
 
     public VenuesController(
         IMediator mediator,
         IMapper mapper,
-        IUserContext userContext,
-        IFileStorageService fileStorageService)
+        IUserContext userContext)
     {
         _mediator = mediator;
         _mapper = mapper;
         _userContext = userContext;
-        _fileStorageService = fileStorageService;
+    }
+
+    [AllowAnonymous]
+    [HttpGet("search")]
+    public async Task<IActionResult> SearchVenues(
+        [FromQuery] SearchVenuesRequest request,
+        CancellationToken cancellationToken)
+    {
+        var query = _mapper.Map<SearchVenuesQuery>(request);
+
+        var result = await _mediator.Send(query, cancellationToken);
+
+        return result.Match(
+            Ok,
+            errors => Problem(errors));
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetVenue(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var venueId = VenueId.Create(id);
+
+        var query = new GetByIdQuery(venueId);
+
+        var result = await _mediator.Send(query, cancellationToken);
+
+        return result.Match(
+            Ok,
+            errors => Problem(errors));
+    }
+
+    [HttpGet("mine")]
+    public async Task<IActionResult> GetMyVenues(CancellationToken cancellationToken)
+    {
+        var userId = _userContext.GetCurrentUserId();
+
+        var query = new GetByUserQuery(userId);
+
+        var result = await _mediator.Send(query, cancellationToken);
+
+        return result.Match(
+            Ok,
+            errors => Problem(errors));
     }
 
     [HttpPost]
@@ -37,35 +83,30 @@ public class VenuesController : ApiController
     {
         var userId = _userContext.GetCurrentUserId();
 
-        // Upload main image to Azure Storage (API layer responsibility)
-        byte[] imageData;
-        using (var memoryStream = new MemoryStream())
-        {
-            await request.MainImage.CopyToAsync(memoryStream, cancellationToken);
-            imageData = memoryStream.ToArray();
-        }
-
-        var mainImageUrl = await _fileStorageService.UploadImageAsync(
-            imageData,
-            request.MainImage.FileName,
-            request.MainImage.ContentType,
-            "venues",
-            $"{userId.Value}/main-image",
-            cancellationToken);
-
-        // Map to command using Mapster
-        var command = _mapper.Map<CreateWeddingVenueOnboardingCommand>((request, userId, mainImageUrl));
+        var command = _mapper.Map<CreateWeddingVenueOnboardingCommand>((request, userId));
 
         var result = await _mediator.Send(command, cancellationToken);
 
-        // Compensating transaction: Delete uploaded image if command failed
-        if (result.IsError)
-        {
-            await _fileStorageService.DeleteImageAsync(mainImageUrl, cancellationToken);
-        }
+        return result.Match(
+            Ok,
+            errors => Problem(errors));
+    }
+
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> UpdateVenue(
+        Guid id,
+        [FromForm] UpdateWeddingVenueRequest request,
+        CancellationToken cancellationToken)
+    {
+        var userId = _userContext.GetCurrentUserId();
+        var venueId = VenueId.Create(id);
+
+        var command = _mapper.Map<UpdateWeddingVenueCommand>((request, userId, venueId));
+
+        var result = await _mediator.Send(command, cancellationToken);
 
         return result.Match(
-            venueDto => Ok(),
+            Ok,
             errors => Problem(errors));
     }
 }

@@ -28,6 +28,9 @@ public static class DependencyInjection
         StripeConfiguration.ApiKey = configuration["Stripe:SecretKey"];
 
         services.AddScoped<IWeddingVenueRepository, WeddingVenueRepository>();
+        services.AddScoped<IMunicipalityRepository, MunicipalityRepository>();
+        services.AddScoped<IDistrictRepository, DistrictRepository>();
+        services.AddScoped<ICountryRepository, CountryRepository>();
         services.AddScoped<ISubscriptionService, SubscriptionService>();
 
         services.AddStorage(configuration);

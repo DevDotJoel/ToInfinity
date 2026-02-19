@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as venuesApi from "./api";
 import type { CreateVenueFormData } from "./schemas/create-venue.schema";
+import type { EditVenueFormData } from "./schemas/edit-venue.schema";
 import type { MutationConfig } from "../../libs/react-query";
 
 const VENUES_QUERY_KEY = "venues";
@@ -37,6 +38,24 @@ export const useCreateVenue = (
     mutationFn: (data: CreateVenueFormData) => venuesApi.createVenue(data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [MY_VENUES_QUERY_KEY] });
+      config?.onSuccess?.(data);
+    },
+    onError: config?.onError,
+    onSettled: config?.onSettled,
+  });
+};
+
+export const useUpdateVenue = (
+  config?: MutationConfig<typeof venuesApi.updateVenue>
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: EditVenueFormData }) =>
+      venuesApi.updateVenue({ id, data }),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: [MY_VENUES_QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [VENUES_QUERY_KEY] });
       config?.onSuccess?.(data);
     },
     onError: config?.onError,

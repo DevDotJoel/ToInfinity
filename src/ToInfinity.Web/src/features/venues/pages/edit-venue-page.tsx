@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
@@ -8,16 +8,19 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Fade from "@mui/material/Fade";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import { useCreateVenue } from "../hooks";
-import { VenueForm, type VenueFormData } from "../components/venue-form";
-import type { CreateVenueFormData } from "../schemas/create-venue.schema";
+import { useVenue, useUpdateVenue } from "../hooks";
+import { VenueForm } from "../components/venue-form";
+import type { EditVenueFormData } from "../schemas/edit-venue.schema";
 
-export default function CreateVenuePage() {
+export default function EditVenuePage() {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [success, setSuccess] = useState(false);
   const [serverError, setServerError] = useState("");
 
-  const { mutate: createVenue, isPending } = useCreateVenue({
+  const { data: venue, isLoading: isLoadingVenue } = useVenue(id!);
+
+  const { mutate: updateVenue, isPending } = useUpdateVenue({
     onSuccess: () => {
       setSuccess(true);
       setTimeout(() => {
@@ -29,10 +32,37 @@ export default function CreateVenuePage() {
     },
   });
 
-  const handleSubmit = (data: VenueFormData) => {
+  const handleSubmit = (data: EditVenueFormData) => {
     setServerError("");
-    createVenue(data as CreateVenueFormData);
+    updateVenue({ id: id!, data });
   };
+
+  if (isLoadingVenue) {
+    return (
+      <Container
+        maxWidth="xl"
+        sx={{
+          py: 3,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "60vh",
+        }}
+      >
+        <CircularProgress sx={{ color: "secondary.main" }} />
+      </Container>
+    );
+  }
+
+  if (!venue) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Typography sx={{ color: "text.secondary" }}>
+          Venue not found.
+        </Typography>
+      </Container>
+    );
+  }
 
   if (success) {
     return (
@@ -72,13 +102,12 @@ export default function CreateVenuePage() {
               mb: 1,
             }}
           >
-            Venue submitted!
+            Venue updated!
           </Typography>
           <Typography
             sx={{ color: "text.secondary", fontSize: "0.95rem", mb: 1 }}
           >
-            Your venue is now under review. We will notify you once it is
-            published.
+            Your changes have been saved successfully.
           </Typography>
           <CircularProgress size={20} sx={{ mt: 1, color: "secondary.main" }} />
           <Typography
@@ -116,17 +145,17 @@ export default function CreateVenuePage() {
               fontSize: { xs: "1.4rem", md: "1.7rem" },
             }}
           >
-            List your venue
+            Edit venue
           </Typography>
           <Typography sx={{ color: "text.secondary", fontSize: "0.88rem" }}>
-            Fill in the details below to showcase your venue to thousands of
-            couples.
+            Update your venue details below.
           </Typography>
         </Box>
       </Box>
 
       <VenueForm
-        mode="create"
+        mode="edit"
+        venue={venue}
         onSubmit={handleSubmit}
         onCancel={() => navigate("/app/venues")}
         isSubmitting={isPending}

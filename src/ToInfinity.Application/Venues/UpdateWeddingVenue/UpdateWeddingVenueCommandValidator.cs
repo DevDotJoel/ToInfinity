@@ -1,15 +1,19 @@
 using FluentValidation;
 
-namespace ToInfinity.Application.Venues.CreateWeddingVenueOnboarding;
+namespace ToInfinity.Application.Venues.UpdateWeddingVenue;
 
-public class CreateWeddingVenueOnboardingCommandValidator
-    : AbstractValidator<CreateWeddingVenueOnboardingCommand>
+public class UpdateWeddingVenueCommandValidator
+    : AbstractValidator<UpdateWeddingVenueCommand>
 {
     private static readonly string[] AllowedContentTypes = ["image/jpeg", "image/png", "image/webp"];
     private const int MaxImageSizeInBytes = 5 * 1024 * 1024; // 5 MB
 
-    public CreateWeddingVenueOnboardingCommandValidator()
+    public UpdateWeddingVenueCommandValidator()
     {
+        RuleFor(x => x.VenueId)
+            .NotEmpty()
+            .WithMessage("VenueId is required.");
+
         RuleFor(x => x.UserId)
             .NotEmpty()
             .WithMessage("UserId is required.");
@@ -46,20 +50,22 @@ public class CreateWeddingVenueOnboardingCommandValidator
             .GreaterThanOrEqualTo(0)
             .WithMessage("Price per person must be greater than or equal to 0.");
 
-        RuleFor(x => x.ImageData)
-            .NotEmpty()
-            .WithMessage("Main image is required.")
-            .Must(data => data.Length <= MaxImageSizeInBytes)
-            .WithMessage("Main image must not exceed 5 MB.");
+        // Image validation only when a new image is provided
+        When(x => x.ImageData is { Length: > 0 }, () =>
+        {
+            RuleFor(x => x.ImageData!)
+                .Must(data => data.Length <= MaxImageSizeInBytes)
+                .WithMessage("Main image must not exceed 5 MB.");
 
-        RuleFor(x => x.ImageFileName)
-            .NotEmpty()
-            .WithMessage("Image file name is required.");
+            RuleFor(x => x.ImageFileName)
+                .NotEmpty()
+                .WithMessage("Image file name is required when uploading an image.");
 
-        RuleFor(x => x.ImageContentType)
-            .NotEmpty()
-            .WithMessage("Image content type is required.")
-            .Must(ct => AllowedContentTypes.Contains(ct))
-            .WithMessage("Image must be JPEG, PNG, or WebP.");
+            RuleFor(x => x.ImageContentType)
+                .NotEmpty()
+                .WithMessage("Image content type is required when uploading an image.")
+                .Must(ct => AllowedContentTypes.Contains(ct!))
+                .WithMessage("Only JPEG, PNG, and WebP images are accepted.");
+        });
     }
 }

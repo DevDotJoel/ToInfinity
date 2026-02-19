@@ -87,4 +87,48 @@ public class WeddingVenueRepository : IWeddingVenueRepository
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<List<WeddingVenue>> SearchAsync(
+        CountryId? countryId,
+        DistrictId? districtId,
+        MunicipalityId? municipalityId,
+        int page,
+        int size,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.WeddingVenues.AsNoTracking().AsQueryable();
+
+        if (municipalityId is not null)
+        {
+            query = query.Where(v => v.MunicipalityId == municipalityId);
+        }
+        else if (districtId is not null)
+        {
+            var municipalityIds = await _context.Municipalities
+                .Where(m => m.DistrictId == districtId)
+                .Select(m => m.Id)
+                .ToListAsync(cancellationToken);
+
+            query = query.Where(v => municipalityIds.Contains(v.MunicipalityId));
+        }
+        else if (countryId is not null)
+        {
+            var districtIds = await _context.Districts
+                .Where(d => d.CountryId == countryId)
+                .Select(d => d.Id)
+                .ToListAsync(cancellationToken);
+
+            var municipalityIds = await _context.Municipalities
+                .Where(m => districtIds.Contains(m.DistrictId))
+                .Select(m => m.Id)
+                .ToListAsync(cancellationToken);
+
+            query = query.Where(v => municipalityIds.Contains(v.MunicipalityId));
+        }
+
+        return await query
+            .Skip((page - 1) * size)
+            .Take(size)
+            .ToListAsync(cancellationToken);
+    }
 }

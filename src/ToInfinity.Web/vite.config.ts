@@ -11,16 +11,14 @@ export default defineConfig(({ command }) => ({
     port: 3000,
   },
   build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'mui-core': ['@mui/material', '@mui/system', '@mui/styled-engine'],
-          'mui-icons': ['@mui/icons-material'],
-          'query': ['@tanstack/react-query'],
-          'forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
-        },
-      },
-    },
-  }
+        rollupOptions: {
+            output:{
+                manualChunks(id) {
+                    if (id.includes('node_modules')) {
+                        return id.toString().split('node_modules/')[1].split('/')[0].toString();
+                    }
+                }
+            }
+        }
+    }
 }))
