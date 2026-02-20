@@ -40,7 +40,7 @@ export const VenueListCard = memo(
           sx={{
             position: "relative",
             width: { xs: "100%", sm: 300 },
-            minHeight: { xs: 200, sm: 240 },
+            height: { xs: 200, sm: 240 },
             flexShrink: 0,
             overflow: "hidden",
             bgcolor: "grey.200",
