@@ -13,6 +13,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import EuroIcon from "@mui/icons-material/Euro";
 import type { Venue } from "../types";
+import { getVenueDetailUrl } from "../utils/venue-url";
 
 interface MyVenueCardProps {
   venue: Venue;
@@ -88,7 +89,7 @@ export const MyVenueCard = ({ venue }: MyVenueCardProps) => {
               <IconButton
                 size="small"
                 component={RouterLink}
-                to={`/venues/${venue.id}`}
+                to={getVenueDetailUrl(venue.id, venue.name)}
                 sx={{
                   bgcolor: "rgba(255,255,255,0.9)",
                   "&:hover": { bgcolor: "#fff" },
@@ -132,7 +133,7 @@ export const MyVenueCard = ({ venue }: MyVenueCardProps) => {
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.3 }}>
               <PeopleIcon sx={{ fontSize: 15, color: "text.secondary" }} />
               <Typography sx={{ fontSize: "0.82rem", color: "text.secondary" }}>
-                Up to {venue.capacity}
+                Up to {venue.maxCapacity}
               </Typography>
             </Box>
           </Box>
@@ -191,7 +192,7 @@ export const MyVenueCard = ({ venue }: MyVenueCardProps) => {
                   mb: 0.3,
                 }}
               >
-                {venue.capacity}
+                {venue.maxCapacity}
               </Typography>
               <Typography sx={{ fontSize: "0.7rem", color: "text.secondary" }}>
                 Guests

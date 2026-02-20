@@ -3,12 +3,14 @@ import { Route, Routes } from "react-router-dom";
 import { LoadingFallback } from "../../components/loading-fallback";
 
 const VenuesPage = lazy(() => import("./pages/venues-page"));
+const VenueDetailPage = lazy(() => import("./pages/venue-detail-page"));
 
 export const VenuesRoutes = () => {
   return (
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
         <Route index element={<VenuesPage />} />
+        <Route path=":id/:slug?" element={<VenueDetailPage />} />
       </Routes>
     </Suspense>
   );

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ToInfinity.Domain.Entities;
+using ToInfinity.Domain.Enums;
 using ToInfinity.Domain.ValueObjects;
 
 namespace ToInfinity.Infrastructure.Persistence.Configurations;
@@ -39,6 +40,10 @@ public class WeddingVenueConfiguration : IEntityTypeConfiguration<WeddingVenue>
             .IsRequired()
             .HasMaxLength(2000);
 
+        builder.Property(v => v.VenueType)
+            .IsRequired()
+            .HasConversion<int>();
+
         builder.Property(v => v.Street)
             .IsRequired()
             .HasMaxLength(200);
@@ -58,22 +63,63 @@ public class WeddingVenueConfiguration : IEntityTypeConfiguration<WeddingVenue>
             .HasForeignKey(v => v.MunicipalityId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.Property(v => v.Capacity)
+        builder.Property(v => v.MinCapacity)
             .IsRequired();
+
+        builder.Property(v => v.MaxCapacity)
+            .IsRequired();
+
+        builder.Property(v => v.PricePerPerson)
+            .IsRequired()
+            .HasColumnType("decimal(18,2)");
+
+        builder.Property(v => v.RentalPrice)
+            .HasColumnType("decimal(18,2)");
 
         builder.Property(v => v.MainImageUrl)
             .IsRequired()
             .HasMaxLength(500);
+
+        builder.Property(v => v.Styles)
+            .HasConversion<int>()
+            .HasDefaultValue(VenueStyles.None);
+
+        builder.Property(v => v.Amenities)
+            .HasConversion<int>()
+            .HasDefaultValue(VenueAmenities.None);
+
+        builder.Property(v => v.SpacesDescription)
+            .HasMaxLength(5000);
+
+        builder.Property(v => v.ServicesDescription)
+            .HasMaxLength(5000);
+
+        builder.Property(v => v.GastronomyDescription)
+            .HasMaxLength(5000);
+
+        builder.Property(v => v.LocationDescription)
+            .HasMaxLength(5000);
+
+        builder.Property(v => v.Latitude);
+
+        builder.Property(v => v.Longitude);
+
+        builder.Property(v => v.Phone)
+            .HasMaxLength(20);
+
+        builder.Property(v => v.Email)
+            .HasMaxLength(200);
+
+        builder.Property(v => v.Website)
+            .HasMaxLength(500);
+
+        builder.Property(v => v.ClosingTime);
 
         builder.Property(v => v.CreatedAt)
             .IsRequired();
 
         builder.Property(v => v.UpdatedAt)
             .IsRequired();
-
-        builder.Property(v => v.PricePerPerson)
-            .IsRequired()
-            .HasColumnType("decimal(18,2)");
     }
 
     private void ConfigureWeddingGalleryImagesTable(EntityTypeBuilder<WeddingVenue> builder)

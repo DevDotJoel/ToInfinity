@@ -38,6 +38,15 @@ export const useVenue = (id: string) => {
   });
 };
 
+/** Public venue fetch — no auth required */
+export const usePublicVenue = (id: string) => {
+  return useQuery({
+    queryKey: ["public-venue", id],
+    queryFn: () => venuesApi.getPublicVenue(id),
+    enabled: !!id,
+  });
+};
+
 export const useCreateVenue = (
   config?: MutationConfig<typeof venuesApi.createVenue>
 ) => {

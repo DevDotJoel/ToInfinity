@@ -77,10 +77,12 @@ public class CreateWeddingVenueOnboardingCommandHandler
             userId,
             command.Name,
             command.Description,
+            command.VenueType,
             command.Street,
             command.PostalCode,
             MunicipalityId.Create(command.MunicipalityId),
-            command.Capacity,
+            command.MinCapacity,
+            command.MaxCapacity,
             command.PricePerPerson,
             mainImageUrl);
 
@@ -92,6 +94,60 @@ public class CreateWeddingVenueOnboardingCommandHandler
         }
 
         var venue = venueResult.Value;
+
+        // Apply optional enrichment fields
+        var errors = new List<Error>();
+
+        var rentalPriceResult = venue.SetRentalPrice(command.RentalPrice);
+        if (rentalPriceResult.IsError) errors.AddRange(rentalPriceResult.Errors);
+
+        if (command.Styles.HasValue)
+        {
+            var stylesResult = venue.SetStyles(command.Styles.Value);
+            if (stylesResult.IsError) errors.AddRange(stylesResult.Errors);
+        }
+
+        if (command.Amenities.HasValue)
+        {
+            var amenitiesResult = venue.SetAmenities(command.Amenities.Value);
+            if (amenitiesResult.IsError) errors.AddRange(amenitiesResult.Errors);
+        }
+
+        var spacesResult = venue.SetSpacesDescription(command.SpacesDescription);
+        if (spacesResult.IsError) errors.AddRange(spacesResult.Errors);
+
+        var servicesResult = venue.SetServicesDescription(command.ServicesDescription);
+        if (servicesResult.IsError) errors.AddRange(servicesResult.Errors);
+
+        var gastronomyResult = venue.SetGastronomyDescription(command.GastronomyDescription);
+        if (gastronomyResult.IsError) errors.AddRange(gastronomyResult.Errors);
+
+        var locationDescResult = venue.SetLocationDescription(command.LocationDescription);
+        if (locationDescResult.IsError) errors.AddRange(locationDescResult.Errors);
+
+        var latResult = venue.SetLatitude(command.Latitude);
+        if (latResult.IsError) errors.AddRange(latResult.Errors);
+
+        var lngResult = venue.SetLongitude(command.Longitude);
+        if (lngResult.IsError) errors.AddRange(lngResult.Errors);
+
+        var phoneResult = venue.SetPhone(command.Phone);
+        if (phoneResult.IsError) errors.AddRange(phoneResult.Errors);
+
+        var emailResult = venue.SetEmail(command.Email);
+        if (emailResult.IsError) errors.AddRange(emailResult.Errors);
+
+        var websiteResult = venue.SetWebsite(command.Website);
+        if (websiteResult.IsError) errors.AddRange(websiteResult.Errors);
+
+        var closingTimeResult = venue.SetClosingTime(command.ClosingTime);
+        if (closingTimeResult.IsError) errors.AddRange(closingTimeResult.Errors);
+
+        if (errors.Count > 0)
+        {
+            await _fileStorageService.DeleteImageAsync(mainImageUrl, cancellationToken);
+            return errors;
+        }
 
         await _venueRepository.AddAsync(venue, cancellationToken);
 

@@ -45,7 +45,7 @@ export const publicRoutes = [
         element: <LegalRoutes />,
       },
       {
-        path: "venues",
+        path: "venues/*",
         element: <VenuesRoutes />,
       },
       {

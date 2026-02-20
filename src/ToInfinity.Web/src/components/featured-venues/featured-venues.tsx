@@ -12,6 +12,7 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import PeopleIcon from "@mui/icons-material/People";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { venues } from "../../lib/data";
+import { slugify } from "../../utils/slugify";
 
 const FeaturedVenues = () => {
   const featured = venues.slice(0, 3);
@@ -83,7 +84,7 @@ const FeaturedVenues = () => {
             >
               <CardActionArea
                 component={RouterLink}
-                to={`/venues/${venue.id}`}
+                to={`/venues/${venue.id}/${slugify(venue.name)}`}
                 sx={{
                   display: "flex",
                   flexDirection: "column",

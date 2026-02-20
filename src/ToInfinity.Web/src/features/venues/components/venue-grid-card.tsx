@@ -12,6 +12,7 @@ import PeopleIcon from "@mui/icons-material/People";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import type { Venue } from "../types";
+import { getVenueDetailUrl } from "../utils/venue-url";
 
 interface VenueGridCardProps {
   venue: Venue;
@@ -44,7 +45,7 @@ export const VenueGridCard = memo(
         >
           <CardActionArea
             component={RouterLink}
-            to={`/venues/${venue.id}`}
+            to={getVenueDetailUrl(venue.id, venue.name)}
             sx={{
               height: "100%",
               display: "flex",
@@ -92,7 +93,7 @@ export const VenueGridCard = memo(
           <Typography
             variant="h6"
             component={RouterLink}
-            to={`/venues/${venue.id}`}
+            to={getVenueDetailUrl(venue.id, venue.name)}
             sx={{
               fontFamily: "'Playfair Display', serif",
               fontWeight: 600,
@@ -140,13 +141,13 @@ export const VenueGridCard = memo(
                 variant="caption"
                 sx={{ color: "text.secondary", fontSize: "0.75rem" }}
               >
-                {venue.capacity}
+                {venue.minCapacity}–{venue.maxCapacity}
               </Typography>
             </Box>
           </Box>
           <Button
             component={RouterLink}
-            to={`/venues/${venue.id}`}
+            to={getVenueDetailUrl(venue.id, venue.name)}
             variant="contained"
             fullWidth
             size="small"

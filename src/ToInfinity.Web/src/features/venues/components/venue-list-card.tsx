@@ -13,6 +13,7 @@ import EuroIcon from "@mui/icons-material/Euro";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import type { Venue } from "../types";
+import { getVenueDetailUrl } from "../utils/venue-url";
 
 interface VenueListCardProps {
   venue: Venue;
@@ -47,7 +48,7 @@ export const VenueListCard = memo(
         >
           <CardActionArea
             component={RouterLink}
-            to={`/venues/${venue.id}`}
+            to={getVenueDetailUrl(venue.id, venue.name)}
             sx={{
               height: "100%",
               display: "flex",
@@ -117,7 +118,7 @@ export const VenueListCard = memo(
               <Typography
                 variant="h6"
                 component={RouterLink}
-                to={`/venues/${venue.id}`}
+                to={getVenueDetailUrl(venue.id, venue.name)}
                 sx={{
                   fontFamily: "'Playfair Display', serif",
                   fontWeight: 600,
@@ -194,14 +195,14 @@ export const VenueListCard = memo(
                   variant="body2"
                   sx={{ color: "text.secondary", fontSize: "0.85rem" }}
                 >
-                  Up to {venue.capacity}
+                  {venue.minCapacity}–{venue.maxCapacity} guests
                 </Typography>
               </Box>
             </Box>
 
             <Button
               component={RouterLink}
-              to={`/venues/${venue.id}`}
+              to={getVenueDetailUrl(venue.id, venue.name)}
               variant="contained"
               size="small"
               sx={{

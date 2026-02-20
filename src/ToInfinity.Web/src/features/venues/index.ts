@@ -1,5 +1,20 @@
 // Export types
 export type { Venue, SearchVenuesParams } from './types';
+export {
+  VenueType,
+  VenueTypeLabels,
+  AllVenueTypes,
+  VenueStyle,
+  VenueStyleLabels,
+  AllVenueStyles,
+  VenueAmenity,
+  VenueAmenityLabels,
+  AllVenueAmenities,
+  hasFlag,
+  toggleFlag,
+  combineFlags,
+  extractFlags,
+} from './types';
 
 // Export schemas
 export { createVenueSchema } from './schemas/create-venue.schema';
@@ -12,6 +27,7 @@ export {
   useVenues,
   useMyVenues,
   useVenue,
+  usePublicVenue,
   useSearchVenues,
   useCreateVenue,
   useUpdateVenue,
@@ -27,7 +43,10 @@ export { MyVenueCard } from './components/my-venue-card';
 export { VenueImageUpload } from './components/venue-image-upload';
 
 // Export pages
-export { VenuesPage, MyVenuesPage, CreateVenuePage, EditVenuePage } from './pages';
+export { VenuesPage, MyVenuesPage, CreateVenuePage, EditVenuePage, VenueDetailPage } from './pages';
+
+// Export utils
+export { getVenueDetailUrl } from './utils/venue-url';
 
 // Export routes
 export { VenuesRoutes, MyVenuesRoutes } from './routes';

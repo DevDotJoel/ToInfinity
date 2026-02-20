@@ -2,19 +2,31 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
-import Checkbox from "@mui/material/Checkbox";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import FormGroup from "@mui/material/FormGroup";
+import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
 import Collapse from "@mui/material/Collapse";
 import CloseIcon from "@mui/icons-material/Close";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import { useState } from "react";
+import {
+  VenueTypeLabels,
+  AllVenueTypes,
+  VenueStyleLabels,
+  AllVenueStyles,
+  VenueAmenityLabels,
+  AllVenueAmenities,
+  hasFlag,
+  toggleFlag,
+} from "../types";
 
 interface VenueFiltersSidebarProps {
-  venueTypes: string[];
-  selectedTypes: string[];
-  onTypeToggle: (type: string) => void;
+  selectedType: number | undefined;
+  onTypeChange: (type: number | undefined) => void;
+  selectedStyles: number;
+  onStylesChange: (styles: number) => void;
+  selectedAmenities: number;
+  onAmenitiesChange: (amenities: number) => void;
   onClearAll: () => void;
   isMobile?: boolean;
   onClose?: () => void;
@@ -56,15 +68,26 @@ const SectionHeader = ({
 );
 
 export const VenueFiltersSidebar = ({
-  venueTypes,
-  selectedTypes,
-  onTypeToggle,
+  selectedType,
+  onTypeChange,
+  selectedStyles,
+  onStylesChange,
+  selectedAmenities,
+  onAmenitiesChange,
   onClearAll,
   isMobile = false,
   onClose,
 }: VenueFiltersSidebarProps) => {
-  const activeFilterCount = selectedTypes.length;
-  const typeOpen = true;
+  const activeFilterCount =
+    (selectedType !== undefined ? 1 : 0) +
+    (selectedStyles > 0 ? 1 : 0) +
+    (selectedAmenities > 0 ? 1 : 0);
+
+  const [typeOpen, setTypeOpen] = useState(true);
+  const [stylesOpen, setStylesOpen] = useState(true);
+  const [amenitiesOpen, setAmenitiesOpen] = useState(false);
+
+  const venueTypeValues = AllVenueTypes;
 
   return (
     <Box sx={{ p: 2.5 }}>
@@ -120,37 +143,147 @@ export const VenueFiltersSidebar = ({
       <Divider sx={{ mb: 1.5 }} />
 
       {/* Venue Type */}
-      <SectionHeader label="Venue Type" open={typeOpen} onToggle={() => {}} />
+      <SectionHeader
+        label="Venue Type"
+        open={typeOpen}
+        onToggle={() => setTypeOpen(!typeOpen)}
+      />
       <Collapse in={typeOpen}>
-        <FormGroup sx={{ pl: 0.5, pb: 1.5 }}>
-          {venueTypes
-            .filter((t) => t !== "All")
-            .map((type) => (
-              <FormControlLabel
-                key={type}
-                control={
-                  <Checkbox
-                    size="small"
-                    checked={selectedTypes.includes(type)}
-                    onChange={() => onTypeToggle(type)}
-                    sx={{
-                      color: "rgba(61,47,37,0.3)",
-                      "&.Mui-checked": { color: "secondary.main" },
-                      py: 0.4,
-                    }}
-                  />
-                }
-                label={
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "text.secondary", fontSize: "0.88rem" }}
-                  >
-                    {type}
-                  </Typography>
-                }
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 0.75,
+            pl: 0.5,
+            pb: 1.5,
+          }}
+        >
+          {venueTypeValues.map((value) => {
+            const selected = selectedType === value;
+            return (
+              <Chip
+                key={value}
+                label={VenueTypeLabels[value]}
+                size="small"
+                onClick={() => onTypeChange(selected ? undefined : value)}
+                variant={selected ? "filled" : "outlined"}
+                sx={{
+                  fontWeight: selected ? 600 : 400,
+                  fontSize: "0.82rem",
+                  borderColor: selected
+                    ? "secondary.main"
+                    : "rgba(61,47,37,0.2)",
+                  bgcolor: selected ? "rgba(196,114,78,0.12)" : "transparent",
+                  color: selected ? "secondary.dark" : "text.secondary",
+                  "&:hover": {
+                    bgcolor: selected
+                      ? "rgba(196,114,78,0.18)"
+                      : "rgba(61,47,37,0.04)",
+                  },
+                  transition: "all 0.15s ease",
+                }}
               />
-            ))}
-        </FormGroup>
+            );
+          })}
+        </Box>
+      </Collapse>
+
+      <Divider sx={{ mb: 1.5 }} />
+
+      {/* Venue Styles */}
+      <SectionHeader
+        label="Styles"
+        open={stylesOpen}
+        onToggle={() => setStylesOpen(!stylesOpen)}
+      />
+      <Collapse in={stylesOpen}>
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 0.75,
+            pl: 0.5,
+            pb: 1.5,
+          }}
+        >
+          {AllVenueStyles.map((flag) => {
+            const selected = hasFlag(selectedStyles, flag);
+            return (
+              <Chip
+                key={flag}
+                label={VenueStyleLabels[flag]}
+                size="small"
+                onClick={() => onStylesChange(toggleFlag(selectedStyles, flag))}
+                variant={selected ? "filled" : "outlined"}
+                sx={{
+                  fontWeight: selected ? 600 : 400,
+                  fontSize: "0.82rem",
+                  borderColor: selected
+                    ? "secondary.main"
+                    : "rgba(61,47,37,0.2)",
+                  bgcolor: selected ? "rgba(196,114,78,0.12)" : "transparent",
+                  color: selected ? "secondary.dark" : "text.secondary",
+                  "&:hover": {
+                    bgcolor: selected
+                      ? "rgba(196,114,78,0.18)"
+                      : "rgba(61,47,37,0.04)",
+                  },
+                  transition: "all 0.15s ease",
+                }}
+              />
+            );
+          })}
+        </Box>
+      </Collapse>
+
+      <Divider sx={{ mb: 1.5 }} />
+
+      {/* Amenities */}
+      <SectionHeader
+        label="Amenities"
+        open={amenitiesOpen}
+        onToggle={() => setAmenitiesOpen(!amenitiesOpen)}
+      />
+      <Collapse in={amenitiesOpen}>
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 0.75,
+            pl: 0.5,
+            pb: 1.5,
+          }}
+        >
+          {AllVenueAmenities.map((flag) => {
+            const selected = hasFlag(selectedAmenities, flag);
+            return (
+              <Chip
+                key={flag}
+                label={VenueAmenityLabels[flag]}
+                size="small"
+                onClick={() =>
+                  onAmenitiesChange(toggleFlag(selectedAmenities, flag))
+                }
+                variant={selected ? "filled" : "outlined"}
+                sx={{
+                  fontWeight: selected ? 600 : 400,
+                  fontSize: "0.82rem",
+                  borderColor: selected
+                    ? "secondary.main"
+                    : "rgba(61,47,37,0.2)",
+                  bgcolor: selected ? "rgba(196,114,78,0.12)" : "transparent",
+                  color: selected ? "secondary.dark" : "text.secondary",
+                  "&:hover": {
+                    bgcolor: selected
+                      ? "rgba(196,114,78,0.18)"
+                      : "rgba(61,47,37,0.04)",
+                  },
+                  transition: "all 0.15s ease",
+                }}
+              />
+            );
+          })}
+        </Box>
       </Collapse>
 
       <Divider sx={{ mb: 1.5 }} />
