@@ -22,6 +22,7 @@ import {
 } from "../schemas/create-venue.schema";
 import { VenueImageUpload } from "./venue-image-upload";
 import { useLocations } from "../../locations";
+import { VenueTypeLabels, AllVenueTypes } from "../types";
 
 interface CreateVenueFormProps {
   onSubmit: (data: CreateVenueFormData) => void;
@@ -117,17 +118,19 @@ export const CreateVenueForm = ({
     defaultValues: {
       name: "",
       description: "",
+      venueType: undefined,
       street: "",
       postalCode: "",
       municipalityId: undefined,
-      capacity: undefined,
+      minCapacity: undefined,
+      maxCapacity: undefined,
       pricePerPerson: undefined,
       mainImage: undefined,
     },
   });
 
   const pricePerPerson = watch("pricePerPerson");
-  const capacity = watch("capacity");
+  const maxCapacity = watch("maxCapacity");
 
   const countries = locationsData?.countries ?? [];
 
@@ -217,6 +220,29 @@ export const CreateVenueForm = ({
             helperText={errors.description?.message}
             disabled={isSubmitting}
             sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+          />
+          <Controller
+            name="venueType"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                select
+                fullWidth
+                label="Venue Type"
+                value={field.value ?? ""}
+                onChange={(e) => field.onChange(Number(e.target.value))}
+                error={!!errors.venueType}
+                helperText={errors.venueType?.message}
+                disabled={isSubmitting}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+              >
+                {AllVenueTypes.map((value) => (
+                  <MenuItem key={value} value={value}>
+                    {VenueTypeLabels[value]}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
           />
         </Box>
       </SectionCard>
@@ -413,15 +439,39 @@ export const CreateVenueForm = ({
               sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
+          <Grid size={{ xs: 12, sm: 3 }}>
             <TextField
-              {...register("capacity", { valueAsNumber: true })}
+              {...register("minCapacity", { valueAsNumber: true })}
               fullWidth
-              label="Maximum Capacity"
-              placeholder="e.g. 250"
+              label="Min Capacity"
+              placeholder="e.g. 50"
               type="number"
-              error={!!errors.capacity}
-              helperText={errors.capacity?.message}
+              error={!!errors.minCapacity}
+              helperText={errors.minCapacity?.message}
+              disabled={isSubmitting}
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PeopleIcon
+                        sx={{ color: "text.secondary", fontSize: 18 }}
+                      />
+                    </InputAdornment>
+                  ),
+                },
+              }}
+              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 3 }}>
+            <TextField
+              {...register("maxCapacity", { valueAsNumber: true })}
+              fullWidth
+              label="Max Capacity"
+              placeholder="e.g. 300"
+              type="number"
+              error={!!errors.maxCapacity}
+              helperText={errors.maxCapacity?.message}
               disabled={isSubmitting}
               slotProps={{
                 input: {
@@ -447,7 +497,7 @@ export const CreateVenueForm = ({
             />
           </Grid>
 
-          {pricePerPerson > 0 && capacity > 0 && (
+          {pricePerPerson > 0 && maxCapacity > 0 && (
             <Grid size={12}>
               <Box
                 sx={{
@@ -475,7 +525,7 @@ export const CreateVenueForm = ({
                     fontSize: "1.1rem",
                   }}
                 >
-                  {(pricePerPerson * capacity).toLocaleString("pt-PT")}
+                  {(pricePerPerson * maxCapacity).toLocaleString("pt-PT")}
                   {"\u20AC"}
                 </Typography>
               </Box>

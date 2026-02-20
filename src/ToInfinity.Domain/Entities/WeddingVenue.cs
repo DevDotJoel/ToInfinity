@@ -1,4 +1,5 @@
 using ErrorOr;
+using ToInfinity.Domain.Enums;
 using ToInfinity.Domain.Events;
 using ToInfinity.Domain.Interfaces;
 using ToInfinity.Domain.Shared;
@@ -13,12 +14,27 @@ public sealed class WeddingVenue : Entity<VenueId>, IBaseUser
     public UserId UserId { get; private set; }
     public string Name { get; private set; }
     public string Description { get; private set; }
+    public VenueType VenueType { get; private set; }
     public string Street { get; private set; }
     public string PostalCode { get; private set; }
     public MunicipalityId MunicipalityId { get; private set; }
-    public int Capacity { get; private set; }
+    public int MinCapacity { get; private set; }
+    public int MaxCapacity { get; private set; }
     public decimal PricePerPerson { get; private set; }
+    public decimal? RentalPrice { get; private set; }
     public string MainImageUrl { get; private set; }
+    public VenueStyles Styles { get; private set; }
+    public VenueAmenities Amenities { get; private set; }
+    public string? SpacesDescription { get; private set; }
+    public string? ServicesDescription { get; private set; }
+    public string? GastronomyDescription { get; private set; }
+    public string? LocationDescription { get; private set; }
+    public double? Latitude { get; private set; }
+    public double? Longitude { get; private set; }
+    public string? Phone { get; private set; }
+    public string? Email { get; private set; }
+    public string? Website { get; private set; }
+    public TimeOnly? ClosingTime { get; private set; }
     public IReadOnlyList<WeddingGalleryImage> Gallery => _gallery.AsReadOnly();
 
     private WeddingVenue(
@@ -26,42 +42,43 @@ public sealed class WeddingVenue : Entity<VenueId>, IBaseUser
         UserId userId,
         string name,
         string description,
+        VenueType venueType,
         string street,
         string postalCode,
         MunicipalityId municipalityId,
-        int capacity,
+        int minCapacity,
+        int maxCapacity,
         decimal pricePerPerson,
         string mainImageUrl) : base(id)
     {
         UserId = userId;
         Name = name;
         Description = description;
+        VenueType = venueType;
         Street = street;
         PostalCode = postalCode;
         MunicipalityId = municipalityId;
-        Capacity = capacity;
+        MinCapacity = minCapacity;
+        MaxCapacity = maxCapacity;
         PricePerPerson = pricePerPerson;
         MainImageUrl = mainImageUrl;
     }
+
     private WeddingVenue()
     {
-        UserId = default!;
-        Name = default!;
-        Description = default!;
-        Street = default!;
-        PostalCode = default!;
-        MunicipalityId = default!;
-        MainImageUrl = default!;
+        // For ORM
     }
 
     public static ErrorOr<WeddingVenue> Create(
         UserId userId,
         string name,
         string description,
+        VenueType venueType,
         string street,
         string postalCode,
         MunicipalityId municipalityId,
-        int capacity,
+        int minCapacity,
+        int maxCapacity,
         decimal pricePerPerson,
         string mainImageUrl)
     {
@@ -86,6 +103,13 @@ public sealed class WeddingVenue : Entity<VenueId>, IBaseUser
                 description: "Description cannot be empty.");
         }
 
+        if (!Enum.IsDefined(venueType))
+        {
+            return Error.Validation(
+                code: "WeddingVenue.VenueType",
+                description: "VenueType is not a valid value.");
+        }
+
         if (string.IsNullOrWhiteSpace(street))
         {
             return Error.Validation(
@@ -107,11 +131,25 @@ public sealed class WeddingVenue : Entity<VenueId>, IBaseUser
                 description: "MunicipalityId cannot be null.");
         }
 
-        if (capacity <= 0)
+        if (minCapacity <= 0)
+        {
+            return Error.Validation(
+                code: "WeddingVenue.MinCapacity",
+                description: "MinCapacity must be greater than 0.");
+        }
+
+        if (maxCapacity <= 0)
+        {
+            return Error.Validation(
+                code: "WeddingVenue.MaxCapacity",
+                description: "MaxCapacity must be greater than 0.");
+        }
+
+        if (minCapacity > maxCapacity)
         {
             return Error.Validation(
                 code: "WeddingVenue.Capacity",
-                description: "Capacity must be greater than 0.");
+                description: "MinCapacity cannot be greater than MaxCapacity.");
         }
 
         if (pricePerPerson < 0)
@@ -133,16 +171,16 @@ public sealed class WeddingVenue : Entity<VenueId>, IBaseUser
             userId,
             name,
             description,
+            venueType,
             street,
             postalCode,
             municipalityId,
-            capacity,
+            minCapacity,
+            maxCapacity,
             pricePerPerson,
             mainImageUrl);
 
         // Raise domain event
-        // Note: Event raising mechanism would be implemented in base Entity class
-        // For now, just creating the event as a placeholder
         var venueCreatedEvent = new VenueCreated(venue.Id.Value);
 
         return venue;
@@ -226,16 +264,56 @@ public sealed class WeddingVenue : Entity<VenueId>, IBaseUser
         return Result.Success;
     }
 
-    public ErrorOr<Success> SetCapacity(int capacity)
+    public ErrorOr<Success> SetVenueType(VenueType venueType)
     {
-        if (capacity <= 0)
+        if (!Enum.IsDefined(venueType))
+        {
+            return Error.Validation(
+                code: "WeddingVenue.VenueType",
+                description: "VenueType is not a valid value.");
+        }
+
+        VenueType = venueType;
+        return Result.Success;
+    }
+
+    public ErrorOr<Success> SetMinCapacity(int minCapacity)
+    {
+        if (minCapacity <= 0)
+        {
+            return Error.Validation(
+                code: "WeddingVenue.MinCapacity",
+                description: "MinCapacity must be greater than 0.");
+        }
+
+        if (minCapacity > MaxCapacity)
         {
             return Error.Validation(
                 code: "WeddingVenue.Capacity",
-                description: "Capacity must be greater than 0.");
+                description: "MinCapacity cannot be greater than MaxCapacity.");
         }
 
-        Capacity = capacity;
+        MinCapacity = minCapacity;
+        return Result.Success;
+    }
+
+    public ErrorOr<Success> SetMaxCapacity(int maxCapacity)
+    {
+        if (maxCapacity <= 0)
+        {
+            return Error.Validation(
+                code: "WeddingVenue.MaxCapacity",
+                description: "MaxCapacity must be greater than 0.");
+        }
+
+        if (maxCapacity < MinCapacity)
+        {
+            return Error.Validation(
+                code: "WeddingVenue.Capacity",
+                description: "MaxCapacity cannot be less than MinCapacity.");
+        }
+
+        MaxCapacity = maxCapacity;
         return Result.Success;
     }
 
@@ -262,6 +340,154 @@ public sealed class WeddingVenue : Entity<VenueId>, IBaseUser
         }
 
         MainImageUrl = url;
+        return Result.Success;
+    }
+
+    public ErrorOr<Success> SetRentalPrice(decimal? rentalPrice)
+    {
+        if (rentalPrice.HasValue && rentalPrice.Value < 0)
+        {
+            return Error.Validation(
+                code: "WeddingVenue.RentalPrice",
+                description: "RentalPrice must be greater than or equal to 0.");
+        }
+
+        RentalPrice = rentalPrice;
+        return Result.Success;
+    }
+
+    public ErrorOr<Success> SetStyles(VenueStyles styles)
+    {
+        Styles = styles;
+        return Result.Success;
+    }
+
+    public ErrorOr<Success> SetAmenities(VenueAmenities amenities)
+    {
+        Amenities = amenities;
+        return Result.Success;
+    }
+
+    public ErrorOr<Success> SetSpacesDescription(string? spacesDescription)
+    {
+        if (spacesDescription is not null && spacesDescription.Length > 5000)
+        {
+            return Error.Validation(
+                code: "WeddingVenue.SpacesDescription",
+                description: "SpacesDescription must not exceed 5000 characters.");
+        }
+
+        SpacesDescription = spacesDescription;
+        return Result.Success;
+    }
+
+    public ErrorOr<Success> SetServicesDescription(string? servicesDescription)
+    {
+        if (servicesDescription is not null && servicesDescription.Length > 5000)
+        {
+            return Error.Validation(
+                code: "WeddingVenue.ServicesDescription",
+                description: "ServicesDescription must not exceed 5000 characters.");
+        }
+
+        ServicesDescription = servicesDescription;
+        return Result.Success;
+    }
+
+    public ErrorOr<Success> SetGastronomyDescription(string? gastronomyDescription)
+    {
+        if (gastronomyDescription is not null && gastronomyDescription.Length > 5000)
+        {
+            return Error.Validation(
+                code: "WeddingVenue.GastronomyDescription",
+                description: "GastronomyDescription must not exceed 5000 characters.");
+        }
+
+        GastronomyDescription = gastronomyDescription;
+        return Result.Success;
+    }
+
+    public ErrorOr<Success> SetLocationDescription(string? locationDescription)
+    {
+        if (locationDescription is not null && locationDescription.Length > 5000)
+        {
+            return Error.Validation(
+                code: "WeddingVenue.LocationDescription",
+                description: "LocationDescription must not exceed 5000 characters.");
+        }
+
+        LocationDescription = locationDescription;
+        return Result.Success;
+    }
+
+    public ErrorOr<Success> SetLatitude(double? latitude)
+    {
+        if (latitude.HasValue && (latitude.Value < -90 || latitude.Value > 90))
+        {
+            return Error.Validation(
+                code: "WeddingVenue.Latitude",
+                description: "Latitude must be between -90 and 90.");
+        }
+
+        Latitude = latitude;
+        return Result.Success;
+    }
+
+    public ErrorOr<Success> SetLongitude(double? longitude)
+    {
+        if (longitude.HasValue && (longitude.Value < -180 || longitude.Value > 180))
+        {
+            return Error.Validation(
+                code: "WeddingVenue.Longitude",
+                description: "Longitude must be between -180 and 180.");
+        }
+
+        Longitude = longitude;
+        return Result.Success;
+    }
+
+    public ErrorOr<Success> SetPhone(string? phone)
+    {
+        if (phone is not null && phone.Length > 20)
+        {
+            return Error.Validation(
+                code: "WeddingVenue.Phone",
+                description: "Phone must not exceed 20 characters.");
+        }
+
+        Phone = phone;
+        return Result.Success;
+    }
+
+    public ErrorOr<Success> SetEmail(string? email)
+    {
+        if (email is not null && email.Length > 200)
+        {
+            return Error.Validation(
+                code: "WeddingVenue.Email",
+                description: "Email must not exceed 200 characters.");
+        }
+
+        Email = email;
+        return Result.Success;
+    }
+
+    public ErrorOr<Success> SetWebsite(string? website)
+    {
+        if (website is not null && website.Length > 500)
+        {
+            return Error.Validation(
+                code: "WeddingVenue.Website",
+                description: "Website must not exceed 500 characters.");
+        }
+
+        Website = website;
+        return Result.Success;
+    }
+
+    public ErrorOr<Success> SetClosingTime(TimeOnly? closingTime)
+    {
+        ClosingTime = closingTime;
         return Result.Success;
     }
 

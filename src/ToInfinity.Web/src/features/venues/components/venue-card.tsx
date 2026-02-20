@@ -42,7 +42,7 @@ const VenueCard = ({ venue, onEdit, onDelete }: VenueCardProps) => {
         <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
           <People sx={{ mr: 1, color: "text.secondary" }} />
           <Typography variant="body2" color="text.secondary">
-            Capacity: {venue.capacity}
+            Capacity: {venue.minCapacity}–{venue.maxCapacity}
           </Typography>
         </Box>
         <Typography variant="h6" color="primary" sx={{ mt: 2 }}>

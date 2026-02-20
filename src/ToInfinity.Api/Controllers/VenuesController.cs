@@ -6,6 +6,7 @@ using ToInfinity.Application.Common.Services;
 using ToInfinity.Application.Venues.CreateWeddingVenueOnboarding;
 using ToInfinity.Application.Venues.GetById;
 using ToInfinity.Application.Venues.GetByUser;
+using ToInfinity.Application.Venues.GetMyVenueById;
 using ToInfinity.Application.Venues.SearchVenues;
 using ToInfinity.Application.Venues.UpdateWeddingVenue;
 using ToInfinity.Contracts.Venues;
@@ -46,6 +47,7 @@ public class VenuesController : ApiController
             errors => Problem(errors));
     }
 
+    [AllowAnonymous]
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetVenue(
         Guid id,
@@ -68,6 +70,23 @@ public class VenuesController : ApiController
         var userId = _userContext.GetCurrentUserId();
 
         var query = new GetByUserQuery(userId);
+
+        var result = await _mediator.Send(query, cancellationToken);
+
+        return result.Match(
+            Ok,
+            errors => Problem(errors));
+    }
+
+    [HttpGet("mine/{id:guid}")]
+    public async Task<IActionResult> GetMyVenue(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var userId = _userContext.GetCurrentUserId();
+        var venueId = VenueId.Create(id);
+
+        var query = new GetMyVenueByIdQuery(venueId, userId);
 
         var result = await _mediator.Send(query, cancellationToken);
 

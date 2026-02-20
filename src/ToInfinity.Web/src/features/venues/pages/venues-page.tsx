@@ -17,16 +17,6 @@ import { VenueSearchBar } from "../components/venue-search-bar";
 
 const SIDEBAR_WIDTH = 280;
 
-const VENUE_TYPES = [
-  "All",
-  "Ballroom",
-  "Barn",
-  "Beach",
-  "Garden",
-  "Hotel",
-  "Restaurant",
-];
-
 interface LocationFilter {
   countryId?: number;
   districtId?: number;
@@ -81,7 +71,11 @@ export default function VenuesPage() {
 
   // Filter state
   const [searchInput, setSearchInput] = useState(searchTerm);
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [selectedType, setSelectedType] = useState<number | undefined>(
+    undefined,
+  );
+  const [selectedStyles, setSelectedStyles] = useState(0);
+  const [selectedAmenities, setSelectedAmenities] = useState(0);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [favorites, setFavorites] = useState<string[]>([]);
 
@@ -91,6 +85,9 @@ export default function VenuesPage() {
     countryId: locationFilter.countryId,
     districtId: locationFilter.districtId,
     municipalityId: locationFilter.municipalityId,
+    venueType: selectedType,
+    styles: selectedStyles || undefined,
+    amenities: selectedAmenities || undefined,
     sortBy,
   });
 
@@ -127,10 +124,8 @@ export default function VenuesPage() {
     [setSearchParams],
   );
 
-  const handleTypeToggle = useCallback((type: string) => {
-    setSelectedTypes((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
-    );
+  const handleTypeToggle = useCallback((type: number | undefined) => {
+    setSelectedType(type);
   }, []);
 
   const handleFavoriteToggle = useCallback((id: string) => {
@@ -141,7 +136,9 @@ export default function VenuesPage() {
 
   const clearAllFilters = useCallback(() => {
     setLocationFilter({});
-    setSelectedTypes([]);
+    setSelectedType(undefined);
+    setSelectedStyles(0);
+    setSelectedAmenities(0);
     setSearchInput("");
     setSearchParams(
       (prev) => {
@@ -161,7 +158,9 @@ export default function VenuesPage() {
     (locationFilter.countryId ? 1 : 0) +
     (locationFilter.districtId ? 1 : 0) +
     (locationFilter.municipalityId ? 1 : 0) +
-    selectedTypes.length;
+    (selectedType !== undefined ? 1 : 0) +
+    (selectedStyles > 0 ? 1 : 0) +
+    (selectedAmenities > 0 ? 1 : 0);
 
   return (
     <Box sx={{ py: { xs: 4, md: 5 } }}>
@@ -245,10 +244,17 @@ export default function VenuesPage() {
               }}
             >
               <VenueFiltersSidebar
-                venueTypes={VENUE_TYPES}
-                selectedTypes={selectedTypes}
-                onTypeToggle={handleTypeToggle}
-                onClearAll={() => setSelectedTypes([])}
+                selectedType={selectedType}
+                onTypeChange={handleTypeToggle}
+                selectedStyles={selectedStyles}
+                onStylesChange={setSelectedStyles}
+                selectedAmenities={selectedAmenities}
+                onAmenitiesChange={setSelectedAmenities}
+                onClearAll={() => {
+                  setSelectedType(undefined);
+                  setSelectedStyles(0);
+                  setSelectedAmenities(0);
+                }}
               />
             </Paper>
           )}
@@ -267,10 +273,17 @@ export default function VenuesPage() {
             }}
           >
             <VenueFiltersSidebar
-              venueTypes={VENUE_TYPES}
-              selectedTypes={selectedTypes}
-              onTypeToggle={handleTypeToggle}
-              onClearAll={() => setSelectedTypes([])}
+              selectedType={selectedType}
+              onTypeChange={handleTypeToggle}
+              selectedStyles={selectedStyles}
+              onStylesChange={setSelectedStyles}
+              selectedAmenities={selectedAmenities}
+              onAmenitiesChange={setSelectedAmenities}
+              onClearAll={() => {
+                setSelectedType(undefined);
+                setSelectedStyles(0);
+                setSelectedAmenities(0);
+              }}
               isMobile
               onClose={() => setDrawerOpen(false)}
             />

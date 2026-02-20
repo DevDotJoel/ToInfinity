@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ToInfinity.Application.Common.Persistence;
 using ToInfinity.Domain.Entities;
+using ToInfinity.Domain.Enums;
 using ToInfinity.Domain.ValueObjects;
 
 namespace ToInfinity.Infrastructure.Persistence.Repositories;
@@ -93,6 +94,11 @@ public class WeddingVenueRepository : IWeddingVenueRepository
         CountryId? countryId,
         DistrictId? districtId,
         MunicipalityId? municipalityId,
+        VenueType? venueType,
+        VenueStyles? styles,
+        VenueAmenities? amenities,
+        int? minCapacity,
+        int? maxCapacity,
         string? sortBy,
         int page,
         int size,
@@ -104,6 +110,31 @@ public class WeddingVenueRepository : IWeddingVenueRepository
         {
             var term = searchTerm.Trim().ToLower();
             query = query.Where(v => v.Name.ToLower().Contains(term));
+        }
+
+        if (venueType.HasValue)
+        {
+            query = query.Where(v => v.VenueType == venueType.Value);
+        }
+
+        if (styles.HasValue && styles.Value != VenueStyles.None)
+        {
+            query = query.Where(v => (v.Styles & styles.Value) != 0);
+        }
+
+        if (amenities.HasValue && amenities.Value != VenueAmenities.None)
+        {
+            query = query.Where(v => (v.Amenities & amenities.Value) == amenities.Value);
+        }
+
+        if (minCapacity.HasValue)
+        {
+            query = query.Where(v => v.MaxCapacity >= minCapacity.Value);
+        }
+
+        if (maxCapacity.HasValue)
+        {
+            query = query.Where(v => v.MinCapacity <= maxCapacity.Value);
         }
 
         if (municipalityId is not null)
@@ -138,7 +169,7 @@ public class WeddingVenueRepository : IWeddingVenueRepository
         {
             "price-low" => query.OrderBy(v => v.PricePerPerson),
             "price-high" => query.OrderByDescending(v => v.PricePerPerson),
-            "capacity" => query.OrderByDescending(v => v.Capacity),
+            "capacity" => query.OrderByDescending(v => v.MaxCapacity),
             _ => query.OrderBy(v => v.PricePerPerson),
         };
 
